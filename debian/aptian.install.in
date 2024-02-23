@@ -1,1 +1,5 @@
-usr/bin/
+# Since we have only 1 package listed in debian/control file,
+# the dh_auto_install will take all files installed
+# by "make install" automatically, no need to list them here.
+
+# usr/bin/*
