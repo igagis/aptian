@@ -18,24 +18,25 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 /* ================ LICENSE END ================ */
 
-#include "packages_parser.hpp"
+#include "packages.hpp"
 
 using namespace aptian;
+
+package::package(std::string control) :
+	control(std::move(control))
+{}
 
 namespace {
 class parser
 {
-	enum class state {
-		idle,
-		package,
-		source,
-	};
-
-	state cur_state = state::idle;
+	std::vector<char> buf;
 
 	void feed(utki::span<const char> span)
 	{
-		// TODO:
+		for (char c : span) {
+			if (c == '\n') {
+			}
+		}
 	}
 
 public:
@@ -57,7 +58,7 @@ public:
 			}
 
 			auto span = utki::make_span(buf.data(), num_bytes_read);
-			this->feed(span);
+			this->feed(utki::to_char(span));
 		}
 	}
 };

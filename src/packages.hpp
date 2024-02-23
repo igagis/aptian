@@ -24,26 +24,14 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 namespace aptian {
 
-struct package {
-	std::string package;
-	std::string source;
-	std::string version;
-	std::string architecture;
-	std::string maintainer;
-	std::string installed_size;
-	std::string depends;
-	std::string suggests;
-	std::string section;
-	std::string priority;
-	std::string description_brief;
-	std::string description;
-	std::string build_ids;
-	std::string filename;
-	std::string md5sum;
-	std::string sha1;
-	std::string sha256;
-	std::string sha512;
-	std::string size;
+class package
+{
+	std::string control;
+
+public:
+	const std::string_view package_name;
+
+	package(std::string control);
 };
 
 std::vector<package> read_packages_file(papki::file& fi);
