@@ -20,21 +20,52 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 #include "packages.hpp"
 
+#include <utki/string.hpp>
+
 using namespace aptian;
 
 package::package(std::string control) :
-	control(std::move(control))
+	control(std::move(control)),
+	package_name() // TODO:
 {}
+
+std::string package::to_string() const
+{
+	return this->control;
+}
 
 namespace {
 class parser
 {
+	bool line_start = true;
+
 	std::vector<char> buf;
 
 	void feed(utki::span<const char> span)
 	{
 		for (char c : span) {
+			if (c == '\r') {
+				continue;
+			}
 			if (c == '\n') {
+				if (this->line_start) {
+					// package parsed
+					if (!this->buf.empty()) {
+						this->packages.emplace_back(utki::make_string(this->buf));
+						this->buf.clear();
+
+						// std::cout << "pacakge read:" << '\n';
+						// std::cout << this->packages.back().to_string();
+					}
+				} else {
+					if (!this->buf.empty()) {
+						this->buf.push_back(c);
+					}
+				}
+				this->line_start = !this->line_start;
+			} else {
+				this->line_start = false;
+				this->buf.push_back(c);
 			}
 		}
 	}
@@ -64,7 +95,7 @@ public:
 };
 } // namespace
 
-std::vector<package> read_packages_file(papki::file& fi)
+std::vector<package> aptian::read_packages_file(papki::file& fi)
 {
 	parser p;
 	p.parse(fi);

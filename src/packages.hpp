@@ -32,6 +32,13 @@ public:
 	const std::string_view package_name;
 
 	package(std::string control);
+
+	std::string to_string() const;
+
+	bool operator==(const package& p) const
+	{
+		return this->to_string() == p.to_string();
+	}
 };
 
 std::vector<package> read_packages_file(papki::file& fi);

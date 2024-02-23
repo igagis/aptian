@@ -8,7 +8,9 @@ this_name := tests
 this_no_install := true
 
 this_srcs := $(call prorab-src-dir, src)
-this_srcs += $(filter-out main.cpp, $(call prorab-src-dir, ../../src))
+this_srcs += $(filter-out %/main.cpp, $(call prorab-src-dir, ../../src))
+
+$(info this_srcs = $(this_srcs))
 
 this_ldlibs += -ltst -lpapki
 
