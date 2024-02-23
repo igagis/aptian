@@ -10,7 +10,8 @@ Build-Depends:
 		myci,
 		clang-tidy,
 		clang-format,
-		libtst-dev
+		libtst-dev,
+		libpapki-dev
 Build-Depends-Indep: doxygen
 Standards-Version: 3.9.2
 
