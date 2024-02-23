@@ -5,6 +5,8 @@ $(eval $(call prorab-config, ../../config))
 
 this_name := tests
 
+this_no_install := true
+
 this_srcs := $(call prorab-src-dir, src)
 
 this_ldlibs += -ltst
