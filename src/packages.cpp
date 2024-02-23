@@ -20,19 +20,61 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 #include "packages.hpp"
 
+#include <stdexcept>
+
 #include <utki/string.hpp>
+
+using namespace std::string_view_literals;
 
 using namespace aptian;
 
-package::package(std::string control) :
-	control(std::move(control)),
-	package_name() // TODO:
-{}
+namespace {
+constexpr std::string_view package_entry = "Package: "sv;
+constexpr std::string_view filename_entry = "Filename: "sv;
+constexpr std::string_view version_entry = "Version: "sv;
+} // namespace
 
-std::string package::to_string() const
-{
-	return this->control;
-}
+package::package(decltype(control) control) :
+	control(std::move(control)),
+	fields([this]() {
+		control_fields ret;
+
+		utki::string_parser p(utki::make_string_view(this->control));
+
+		for (;;) {
+			auto line = p.read_chars_until('\n');
+
+			if (line.starts_with(package_entry)) {
+				ret.package = line.substr(package_entry.size());
+				std::cout << "package entry found: " << ret.package << std::endl;
+			}
+			if (line.starts_with(filename_entry)) {
+				ret.filename = line.substr(filename_entry.size());
+			}
+			if (line.starts_with(version_entry)) {
+				ret.version = line.substr(version_entry.size());
+			}
+
+			if (p.empty()) {
+				break;
+			}
+
+			p.read_char(); // read the '\n' char
+		}
+
+		if (ret.package.empty()) {
+			throw std::invalid_argument("Package control file doesn't have 'Package:' entry");
+		}
+		if (ret.filename.empty()) {
+			throw std::invalid_argument("Package control file doesn't have 'Filename:' entry");
+		}
+		if (ret.version.empty()) {
+			throw std::invalid_argument("Package control file doesn't have 'Version:' entry");
+		}
+
+		return ret;
+	}())
+{}
 
 namespace {
 class parser
@@ -51,8 +93,8 @@ class parser
 				if (this->line_start) {
 					// package parsed
 					if (!this->buf.empty()) {
-						this->packages.emplace_back(utki::make_string(this->buf));
-						this->buf.clear();
+						this->packages.emplace_back(std::move(this->buf));
+						ASSERT(this->buf.empty)
 
 						// std::cout << "pacakge read:" << '\n';
 						// std::cout << this->packages.back().to_string();

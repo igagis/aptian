@@ -21,25 +21,41 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 #pragma once
 
 #include <papki/file.hpp>
+#include <utki/string.hpp>
 
 namespace aptian {
 
 class package
 {
-	std::string control;
+	// use vector instead of std::string because
+	// in case std:string has small-string-optimization then when moving the object
+	// saved string_view's will be invalidated, we don't want that here
+	std::vector<char> control;
 
 public:
-	const std::string_view package_name;
+	struct control_fields {
+		std::string_view package;
+		std::string_view version;
+		std::string_view filename;
+	};
 
-	package(std::string control);
+	control_fields fields;
 
-	std::string to_string() const;
+	package(decltype(control) control);
+
+	std::string_view to_string() const
+	{
+		return utki::make_string_view(this->control);
+	}
 
 	bool operator==(const package& p) const
 	{
-		return this->to_string() == p.to_string();
+		return this->control == p.control;
 	}
 };
+
+static_assert(std::is_move_constructible_v<package>, "class package must be movable");
+static_assert(std::is_move_assignable_v<package>, "class package must be movable");
 
 std::vector<package> read_packages_file(papki::file& fi);
 

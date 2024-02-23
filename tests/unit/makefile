@@ -12,7 +12,7 @@ this_srcs += $(filter-out %/main.cpp, $(call prorab-src-dir, ../../src))
 
 $(info this_srcs = $(this_srcs))
 
-this_ldlibs += -ltst -lpapki
+this_ldlibs += -ltst -lpapki -lutki
 
 $(eval $(prorab-build-app))
 
