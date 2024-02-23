@@ -96,7 +96,7 @@ class parser
 						this->packages.emplace_back(std::move(this->buf));
 						ASSERT(this->buf.empty)
 
-						// std::cout << "pacakge read:" << '\n';
+						// std::cout << "package read:" << '\n';
 						// std::cout << this->packages.back().to_string();
 					}
 				} else {
@@ -126,7 +126,7 @@ public:
 			auto num_bytes_read = fi.read(buf);
 			if (num_bytes_read == 0) {
 				// EOF reached
-				this->feed("\n\n");
+				this->feed("\n\n"sv);
 				break;
 			}
 
