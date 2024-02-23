@@ -15,3 +15,5 @@ $(eval $(prorab-clang-format))
 
 this_license_file := LICENSE
 $(eval $(prorab-license))
+
+$(eval $(prorab-include-subdirs))

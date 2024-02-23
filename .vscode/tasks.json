@@ -8,6 +8,12 @@
             "type": "shell",
             "command": "make",
             "group": "build"
+        },
+        {
+            "label": "test_",
+            "type": "shell",
+            "command": "make test",
+            "group": "build"
         }
     ]
 }
