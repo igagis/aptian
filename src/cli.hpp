@@ -26,6 +26,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 namespace aptian {
 
-void handle_command(std::string_view command, utki::span<const char* const> args);
+int handle_cli(int argc, const char** argv);
 
 } // namespace aptian
