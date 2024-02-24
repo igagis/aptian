@@ -22,15 +22,52 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 #include <clargs/parser.hpp>
 
+#include "operations.hpp"
+
 using namespace aptian;
 
+using namespace std::string_literals;
 using namespace std::string_view_literals;
+
+namespace {
+void handle_init_command(utki::span<const char* const> args)
+{
+	std::string dir;
+	std::string gpg;
+
+	clargs::parser p;
+
+	p.add(
+		'd',
+		"dir"s,
+		"path to base directory for repository structure. Must be empty.",
+		[&](std::string_view v) {
+			dir = v;
+		}
+	);
+
+	p.add('k', "gpg", "GPG key to use for signing", [&](std::string_view v){gpg = v;});
+
+	p.parse(args);
+
+	if(dir.empty()){
+		throw std::invalid_argument("--dir argument is not given");
+	}
+
+	if(gpg.empty()){
+		throw std::invalid_argument("--gpg argument is not given");
+	}
+
+	init(dir, gpg);
+}
+} // namespace
 
 namespace {
 void handle_command(std::string_view command, utki::span<const char* const> args)
 {
 	if (command == "init") {
 		std::cout << "init command" << std::endl;
+		handle_init_command(args);
 	}
 }
 } // namespace
@@ -77,12 +114,16 @@ int aptian::handle_cli(int argc, const char** argv)
 	);
 
 	p.add([&](std::string_view command, utki::span<const char* const> cmd_args) {
-		ASSERT(!cmd_args.empty())
 		handle_command(command, cmd_args);
 		no_action = false;
 	});
 
 	p.parse(argc, argv);
+
+	if (no_action) {
+		std::cout << "ERROR: no command given. Run with --help to see available commands." << std::endl;
+		return 1;
+	}
 
 	return 0;
 }
