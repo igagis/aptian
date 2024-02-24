@@ -16,6 +16,18 @@
             "group": "build"
         },
         {
+            "label": "build-dbg",
+            "type": "shell",
+            "command": "make config=dbg",
+            "group": "build"
+        },
+        {
+            "label": "test-dbg",
+            "type": "shell",
+            "command": "make test config=dbg",
+            "group": "build"
+        },
+        {
             "label": "format",
             "type": "shell",
             "command": "make format",

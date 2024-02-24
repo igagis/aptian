@@ -94,7 +94,7 @@ class parser
 					// package parsed
 					if (!this->buf.empty()) {
 						this->packages.emplace_back(std::move(this->buf));
-						ASSERT(this->buf.empty)
+						ASSERT(this->buf.empty())
 
 						// std::cout << "package read:" << '\n';
 						// std::cout << this->packages.back().to_string();

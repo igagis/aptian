@@ -11,7 +11,8 @@ Build-Depends:
 		clang-tidy,
 		clang-format,
 		libtst-dev,
-		libpapki-dev
+		libpapki-dev,
+		libclargs-dev
 Build-Depends-Indep: doxygen
 Standards-Version: 3.9.2
 
