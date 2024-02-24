@@ -22,6 +22,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 #include <clargs/parser.hpp>
 
+#include "commands.hpp"
+
 using namespace std::string_view_literals;
 
 namespace {
@@ -32,7 +34,7 @@ void print_commands_list()
 {
 	std::cout << "Commands:" << "\n";
 	std::cout << "  init  initialize APT repository directory structure" << "\n";
-	std::cout << "  add   add debian package to an APT repository" << "\n";
+	std::cout << "  add   add debian packages to an APT repository" << "\n";
 }
 
 void print_help(std::string_view args_description)
@@ -51,29 +53,27 @@ void print_help(std::string_view args_description)
 
 int main(int argc, const char** argv)
 {
-	bool help = false;
+	bool no_action = true;
 
 	clargs::parser p;
 
 	p.add( //
 		"help",
 		"print help message",
-		[&help]() {
-			help = true;
+		[&]() {
+			print_help(p.description());
+			p.stop();
+			no_action = false;
 		}
 	);
 
-	auto pos_args = p.parse(argc, argv);
+	p.add([&](std::string_view command, utki::span<const char* const> cmd_args) {
+		ASSERT(!cmd_args.empty())
+		aptian::handle_command(command, cmd_args);
+		no_action = false;
+	});
 
-	if (help) {
-		print_help(p.description());
-		return 0;
-	}
-
-	if (pos_args.empty()) {
-		std::cout << "No command given. Run with --help to see list of commands." << "\n";
-		return 1;
-	}
+	p.parse(argc, argv);
 
 	return 0;
 }
