@@ -13,7 +13,7 @@ Build-Depends:
 		libtst-dev,
 		libpapki-dev,
 		libclargs-dev,
-		treeml-dev
+		libtreeml-dev
 Build-Depends-Indep: doxygen
 Standards-Version: 3.9.2
 
