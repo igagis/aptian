@@ -12,7 +12,8 @@ Build-Depends:
 		clang-format,
 		libtst-dev,
 		libpapki-dev,
-		libclargs-dev
+		libclargs-dev,
+		treeml-dev
 Build-Depends-Indep: doxygen
 Standards-Version: 3.9.2
 

@@ -8,7 +8,7 @@ this_name := aptian
 
 this_srcs := $(call prorab-src-dir, src)
 
-this_ldlibs += -lpapki -lutki -lclargs
+this_ldlibs += -lpapki -lutki -lclargs -ltreeml
 
 $(eval $(prorab-build-app))
 
