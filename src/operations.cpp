@@ -38,14 +38,7 @@ void aptian::init(std::string_view dir, std::string_view gpg)
 	ASSERT(!dir.empty())
 	ASSERT(!gpg.empty())
 
-	papki::fs_file df([&]() -> std::string {
-		if (dir.back() == '/') {
-			return std::string(dir);
-		}
-		std::stringstream ss;
-		ss << dir << '/';
-		return ss.str();
-	}());
+	papki::fs_file df(papki::as_dir(dir));
 
 	if (!df.exists()) {
 		std::stringstream ss;
