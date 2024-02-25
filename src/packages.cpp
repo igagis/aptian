@@ -69,9 +69,6 @@ package::package(decltype(control) control) :
 		if (ret.package.empty()) {
 			throw std::invalid_argument("Package control file doesn't have 'Package:' entry");
 		}
-		if (ret.filename.empty()) {
-			throw std::invalid_argument("Package control file doesn't have 'Filename:' entry");
-		}
 		if (ret.version.empty()) {
 			throw std::invalid_argument("Package control file doesn't have 'Version:' entry");
 		}

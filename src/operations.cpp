@@ -24,6 +24,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 #include <tml/tree.hpp>
 #include <utki/debug.hpp>
 
+#include "packages.hpp"
+
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
@@ -63,6 +65,7 @@ namespace {
 constexpr std::string_view config_filename = "aptian.conf"sv;
 constexpr std::string_view dists_subdir = "dists/"sv;
 constexpr std::string_view pool_subdir = "pool/"sv;
+constexpr std::string_view tmp_subdir = "tmp/"sv;
 } // namespace
 
 void aptian::init(std::string_view dir, std::string_view gpg)
@@ -118,8 +121,47 @@ void aptian::add(
 	auto dist_dir = (std::stringstream() << dir << dists_subdir << dist).str();
 	auto comp_dir = (std::stringstream() << dist_dir << comp).str();
 	auto pool_dir = (std::stringstream() << dir << pool_subdir << dist << comp).str();
+	auto tmp_dir = (std::stringstream() << dir << tmp_subdir).str();
 
 	std::cout << "dist_dir = " << dist_dir << std::endl;
 	std::cout << "comp_dir = " << comp_dir << std::endl;
 	std::cout << "pool_dir = " << pool_dir << std::endl;
+
+	// add each package to the pool
+	for (const auto& p : packages) {
+		auto filename = papki::not_dir(p);
+		auto suffix = papki::suffix(filename);
+		if (suffix != "deb") {
+			std::cout << "unsupported package suffix: ." << suffix << std::endl;
+			std::cout << "  skipping: " << filename << std::endl;
+			continue;
+		}
+
+		papki::fs_file tmp_dir_file(tmp_dir);
+		if (tmp_dir_file.exists()) {
+			if (std::remove(tmp_dir_file.path().c_str()) != 0) {
+				std::stringstream ss;
+				ss << "could not delete " << tmp_subdir << " directory";
+				throw std::runtime_error(ss.str());
+			}
+		}
+		tmp_dir_file.make_dir();
+
+		// extract control information form deb package
+		{
+			std::stringstream ss;
+			ss << "dpkg-deb --control " << p << " " << tmp_dir;
+			if (std::system(ss.str().c_str()) != 0) {
+				std::stringstream ss;
+				ss << "could not extract control information from " << filename;
+				throw std::runtime_error(ss.str());
+			}
+		}
+
+        auto control_file_path = (std::stringstream() << tmp_dir << "control").str();
+        auto control = papki::fs_file(control_file_path).load();
+        // TODO:
+        // package pkg();
+
+	}
 }
