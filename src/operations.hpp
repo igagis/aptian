@@ -22,8 +22,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 #include <string_view>
 
+#include <utki/span.hpp>
+
 namespace aptian {
 
 void init(std::string_view dir, std::string_view gpg);
+
+void add(std::string_view dir, std::string_view dist, std::string_view comp, utki::span<const std::string> packages);
 
 } // namespace aptian

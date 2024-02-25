@@ -21,6 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 #include "cli.hpp"
 
 #include <clargs/parser.hpp>
+#include <papki/util.hpp>
 
 #include "operations.hpp"
 
@@ -32,10 +33,16 @@ using namespace std::string_view_literals;
 namespace {
 void handle_init_command(utki::span<const char* const> args)
 {
+	bool help = false;
 	std::string dir;
 	std::string gpg;
 
 	clargs::parser p;
+
+	p.add("help"s, "show 'init' command help information", [&]() {
+		help = true;
+		p.stop();
+	});
 
 	p.add('d', "dir"s, "path to base directory for repository structure. Must be empty.", [&](std::string_view v) {
 		dir = v;
@@ -47,15 +54,94 @@ void handle_init_command(utki::span<const char* const> args)
 
 	p.parse(args);
 
+	if (help) {
+		// TODO: write help message
+		std::cout << "" << std::endl;
+		return;
+	}
+
 	if (dir.empty()) {
 		throw std::invalid_argument("--dir argument is not given");
 	}
-
 	if (gpg.empty()) {
 		throw std::invalid_argument("--gpg argument is not given");
 	}
 
-	init(dir, gpg);
+	init(papki::as_dir(dir), gpg);
+}
+} // namespace
+
+namespace {
+void handle_add_command(utki::span<const char* const> args)
+{
+	bool help = false;
+	std::string dir;
+	std::string dist;
+	std::string comp;
+
+	clargs::parser p;
+
+	p.add( //
+		"help"s,
+		"show 'add' command help information"s,
+		[&]() {
+			help = true;
+			p.stop();
+		}
+	);
+
+	p.add( //
+		'd',
+		"dir"s,
+		"path to base directory for repository structure. Must be empty."s,
+		[&](std::string_view v) {
+			dir = v;
+		}
+	);
+
+	p.add( //
+		"dist"s,
+		"name of *nix distribution, e.g. 'bookworm', 'jammy'"s,
+		[&](std::string_view v) {
+			dist = v;
+		}
+	);
+
+	p.add( //
+		"comp"s,
+		"name of APT component, e.g. 'main'"s,
+		[&](std::string_view v) {
+			comp = v;
+		}
+	);
+
+	auto packages = p.parse(args);
+
+	if (help) {
+		// TODO: write help message
+		std::cout << "" << std::endl;
+		return;
+	}
+
+	if (dir.empty()) {
+		throw std::invalid_argument("--dir argument is not given");
+	}
+	if (dist.empty()) {
+		throw std::invalid_argument("--dist argument is not given");
+	}
+	if (comp.empty()) {
+		throw std::invalid_argument("--comp argument is not given");
+	}
+	if (packages.empty()) {
+		throw std::invalid_argument("no package files given");
+	}
+
+	add( //
+		papki::as_dir(dir),
+		papki::as_dir(dist),
+		papki::as_dir(comp),
+		packages
+	);
 }
 } // namespace
 
@@ -64,6 +150,12 @@ void handle_command(std::string_view command, utki::span<const char* const> args
 {
 	if (command == "init") {
 		handle_init_command(args);
+	} else if (command == "add") {
+		handle_add_command(args);
+	} else {
+		std::stringstream ss;
+		ss << "invalid commad given: " << command;
+		throw std::invalid_argument(ss.str());
 	}
 }
 } // namespace

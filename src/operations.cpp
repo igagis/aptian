@@ -29,8 +29,40 @@ using namespace std::string_view_literals;
 
 using namespace aptian;
 
+/*
+
+APT repository directory structure:
+
+dists
+	<dists>
+		<comps>
+			binary-<archs>
+				Packages
+				Packages.gz
+				Release
+			[binary-source]
+				Packages
+				Packages.gz
+				Release
+		InRelease
+		Release
+		Release.gpg
+pool
+	<dists>
+		<comps>
+			<prefix>
+				<package-source-name>
+					<package-files>
+aptian.conf
+keyring.gpg
+pubkey.gpg
+
+*/
+
 namespace {
 constexpr std::string_view config_filename = "aptian.conf"sv;
+constexpr std::string_view dists_subdir = "dists/"sv;
+constexpr std::string_view pool_subdir = "pool/"sv;
 } // namespace
 
 void aptian::init(std::string_view dir, std::string_view gpg)
@@ -54,11 +86,11 @@ void aptian::init(std::string_view dir, std::string_view gpg)
 
 	std::cout << "initialize APT repository" << std::endl;
 
-	std::cout << "create 'dists/'" << std::endl;
-	papki::fs_file(df.path() + "dists/").make_dir();
+	std::cout << "create '" << dists_subdir << "'" << std::endl;
+	papki::fs_file((std::stringstream() << df.path() << dists_subdir).str()).make_dir();
 
-	std::cout << "create 'pool/'" << std::endl;
-	papki::fs_file(df.path() + "pool/").make_dir();
+	std::cout << "create '" << pool_subdir << "'" << std::endl;
+	papki::fs_file((std::stringstream() << df.path() << pool_subdir).str()).make_dir();
 
 	std::cout << "create " << config_filename << std::endl;
 	{
@@ -69,4 +101,25 @@ void aptian::init(std::string_view dir, std::string_view gpg)
 	}
 
 	std::cout << "done" << std::endl;
+}
+
+void aptian::add(
+	std::string_view dir,
+	std::string_view dist,
+	std::string_view comp,
+	utki::span<const std::string> packages
+)
+{
+	ASSERT(!dir.empty())
+	ASSERT(!dist.empty())
+	ASSERT(!comp.empty())
+	ASSERT(!packages.empty())
+
+	auto dist_dir = (std::stringstream() << dir << dists_subdir << dist).str();
+	auto comp_dir = (std::stringstream() << dist_dir << comp).str();
+	auto pool_dir = (std::stringstream() << dir << pool_subdir << dist << comp).str();
+
+	std::cout << "dist_dir = " << dist_dir << std::endl;
+	std::cout << "comp_dir = " << comp_dir << std::endl;
+	std::cout << "pool_dir = " << pool_dir << std::endl;
 }
