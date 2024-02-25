@@ -32,6 +32,7 @@ namespace {
 constexpr std::string_view package_entry = "Package: "sv;
 constexpr std::string_view filename_entry = "Filename: "sv;
 constexpr std::string_view version_entry = "Version: "sv;
+constexpr std::string_view source_entry = "Source: "sv;
 } // namespace
 
 package::package(decltype(control) control) :
@@ -53,6 +54,9 @@ package::package(decltype(control) control) :
 			}
 			if (line.starts_with(version_entry)) {
 				ret.version = line.substr(version_entry.size());
+			}
+			if (line.starts_with(source_entry)) {
+				ret.source = line.substr(source_entry.size());
 			}
 
 			if (p.empty()) {
