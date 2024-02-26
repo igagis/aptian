@@ -210,7 +210,7 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 		}
 
 		pkg.append_size(papki::fs_file(pkg_path).size());
-		std::cout << "control = " << std::endl;
+		// std::cout << "control = " << std::endl;
 		std::cout << pkg.to_string();
 
 		auto pkg_name = pkg.get_name();
@@ -278,23 +278,6 @@ class architectures
 		return res.first->second;
 	}
 
-	void load_all_archs()
-	{
-		if (this->all_archs_loaded) {
-			return;
-		}
-
-		auto bin_dirs = papki::fs_file(this->comp_dir).list_dir();
-		for (const auto& d : bin_dirs) {
-			if (!d.starts_with(binary_prefix)) {
-				continue;
-			}
-			auto arch = d.substr(binary_prefix.size());
-			this->load_arch(arch);
-		}
-		this->all_archs_loaded = true;
-	}
-
 	auto& get_arch(std::string_view arch)
 	{
 		auto i = this->archs.find(arch);
@@ -302,6 +285,28 @@ class architectures
 			return this->load_arch(arch);
 		}
 		return i->second;
+	}
+
+	void load_all_archs()
+	{
+		if (this->all_archs_loaded) {
+			return;
+		}
+
+		papki::fs_file comp_dir_file(this->comp_dir);
+		if (!comp_dir_file.exists()) {
+			return;
+		}
+
+		auto bin_dirs = comp_dir_file.list_dir();
+		for (const auto& d : bin_dirs) {
+			if (!d.starts_with(binary_prefix)) {
+				continue;
+			}
+			auto arch = d.substr(binary_prefix.size());
+			this->get_arch(arch);
+		}
+		this->all_archs_loaded = true;
 	}
 
 public:
@@ -328,8 +333,20 @@ public:
 
 	void write_packages()
 	{
-		// TODO: does Packages file have to be sorted by package name?
-		// TODO: write
+		for (const auto& arch : this->archs) {
+			auto bin_dir = utki::cat(this->comp_dir, binary_prefix, arch.first, '/');
+
+			std::filesystem::create_directories(bin_dir);
+
+			auto packages_path = utki::cat(bin_dir, packages_filename);
+
+			papki::fs_file packages_file(packages_path);
+
+			papki::file::guard packages_file_guard(packages_file, papki::file::mode::create);
+
+			// TODO: does Packages file have to be sorted by package name?
+			packages_file.write(to_string(arch.second));
+		}
 	}
 };
 
@@ -341,7 +358,7 @@ void add_to_architectures(std::vector<unadded_package> packages, const repo_dirs
 	std::sort(packages.begin(), packages.end(), [](const auto& p1, const auto& p2) {
 		int p1_prio = p1.pkg.fields.architecture == all_architecture ? 0 : 1;
 		int p2_prio = p2.pkg.fields.architecture == all_architecture ? 0 : 1;
-		return p1_prio < p2_prio;
+		return p2_prio < p1_prio; // 'all' archs must go last
 	});
 
 	architectures archs(dirs.comp);
@@ -380,9 +397,9 @@ void aptian::add(
 		.tmp = utki::cat(dir, tmp_subdir)
 	};
 
-	std::cout << "dirs.dist = " << dirs.dist << std::endl;
-	std::cout << "dirs.comp = " << dirs.comp << std::endl;
-	std::cout << "dirs.pool = " << dirs.pool << std::endl;
+	// std::cout << "dirs.dist = " << dirs.dist << std::endl;
+	// std::cout << "dirs.comp = " << dirs.comp << std::endl;
+	// std::cout << "dirs.pool = " << dirs.pool << std::endl;
 
 	auto unadded_packages = prepare_control_info(package_paths, dirs);
 

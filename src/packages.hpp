@@ -47,6 +47,14 @@ public:
 
 	package(std::string_view control);
 
+	package(const package&);
+
+	// no copy assignment, just in case. Was not needed so far.
+	package& operator=(const package&) = delete;
+
+	package(package&&) = default;
+	package& operator=(package&&) = default;
+
 	std::string to_string() const;
 
 	std::string get_name() const;
@@ -68,5 +76,7 @@ static_assert(std::is_move_constructible_v<package>, "class package must be mova
 static_assert(std::is_move_assignable_v<package>, "class package must be movable");
 
 std::vector<package> read_packages_file(papki::file& fi);
+
+std::string to_string(utki::span<const package> packages);
 
 } // namespace aptian

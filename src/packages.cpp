@@ -46,6 +46,12 @@ package::package(std::string_view control) :
 	fields(parse(this->control))
 {}
 
+package::package(const package& p) :
+	control(p.control)
+{
+	this->fields = parse(this->control);
+}
+
 package::control_fields package::parse(utki::span<const std::string> control)
 {
 	control_fields ret;
@@ -208,4 +214,13 @@ std::vector<package> aptian::read_packages_file(papki::file& fi)
 	parser p;
 	p.parse(fi);
 	return std::move(p.packages);
+}
+
+std::string aptian::to_string(utki::span<const package> packages)
+{
+	std::stringstream ss;
+	for (const auto& p : packages) {
+		ss << p.to_string() << "\n";
+	}
+	return ss.str();
 }
