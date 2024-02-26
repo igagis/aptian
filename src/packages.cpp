@@ -33,6 +33,11 @@ constexpr std::string_view package_entry = "Package: "sv;
 constexpr std::string_view filename_entry = "Filename: "sv;
 constexpr std::string_view version_entry = "Version: "sv;
 constexpr std::string_view source_entry = "Source: "sv;
+constexpr std::string_view md5sum_entry = "MD5sum: "sv;
+constexpr std::string_view sha1_entry = "SHA1: "sv;
+constexpr std::string_view sha256_entry = "SHA256: "sv;
+constexpr std::string_view sha512_entry = "SHA512: "sv;
+constexpr std::string_view size_entry = "Size: "sv;
 constexpr std::string_view architecture_entry = "Architecture: "sv;
 } // namespace
 
@@ -110,6 +115,31 @@ void package::append_filename(std::string_view pool_path)
 
 	this->control.push_back(utki::concat(filename_entry, pool_path));
 	this->fields.filename = std::string_view(this->control.back()).substr(filename_entry.size());
+}
+
+void package::append_md5(std::string_view md5)
+{
+	this->control.push_back(utki::concat(md5sum_entry, md5));
+}
+
+void package::append_sha1(std::string_view sha1)
+{
+	this->control.push_back(utki::concat(sha1_entry, sha1));
+}
+
+void package::append_sha256(std::string_view sha256)
+{
+	this->control.push_back(utki::concat(sha256_entry, sha256));
+}
+
+void package::append_sha512(std::string_view sha512)
+{
+	this->control.push_back(utki::concat(sha512_entry, sha512));
+}
+
+void package::append_size(size_t size)
+{
+	this->control.push_back(utki::concat(size_entry, size));
 }
 
 namespace {

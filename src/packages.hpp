@@ -52,6 +52,11 @@ public:
 	std::string get_name() const;
 
 	void append_filename(std::string_view pool_path);
+	void append_md5(std::string_view md5);
+	void append_sha1(std::string_view sha1);
+	void append_sha256(std::string_view sha256);
+	void append_sha512(std::string_view sha512);
+	void append_size(size_t size);
 
 	bool operator==(const package& p) const
 	{

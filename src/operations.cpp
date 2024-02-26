@@ -184,12 +184,8 @@ void aptian::add(
 
 		// extract control information from deb package
 		{
-			std::stringstream ss;
-			ss << "dpkg-deb --control " << pkg_path << " " << tmp_dir;
-			if (std::system(ss.str().c_str()) != 0) {
-				std::stringstream ss;
-				ss << "could not extract control information from " << filename;
-				throw std::runtime_error(ss.str());
+			if (std::system(utki::concat("dpkg-deb --control ", pkg_path, " ", tmp_dir).c_str()) != 0) {
+				throw std::runtime_error(utki::concat("could not extract control information from ", filename));
 			}
 		}
 
@@ -197,6 +193,40 @@ void aptian::add(
 		auto control = papki::fs_file(control_file_path).load();
 
 		package pkg(utki::make_string_view(control));
+
+		// calculate hash sums
+		{
+			auto md5_path = utki::concat(tmp_dir, "md5");
+			auto sha1_path = utki::concat(tmp_dir, "sha1");
+			auto sha256_path = utki::concat(tmp_dir, "sha256");
+			auto sha512_path = utki::concat(tmp_dir, "sha512");
+			if (std::system(utki::concat("md5sum ", pkg_path, " | cut -d\" \" -f1 > ", md5_path).c_str()) != 0) {
+				throw std::runtime_error( //
+					utki::concat("could not calculcate md5 hash sum of the package ", filename)
+				);
+			}
+			if (std::system(utki::concat("sha1sum ", pkg_path, " | cut -d\" \" -f1 > ", sha1_path).c_str()) != 0) {
+				throw std::runtime_error( //
+					utki::concat("could not calculcate sha1 hash sum of the package ", filename)
+				);
+			}
+			if (std::system(utki::concat("sha256sum ", pkg_path, " | cut -d\" \" -f1 > ", sha256_path).c_str()) != 0) {
+				throw std::runtime_error( //
+					utki::concat("could not calculcate sha256 hash sum of the package ", filename)
+				);
+			}
+			if (std::system(utki::concat("sha512sum ", pkg_path, " | cut -d\" \" -f1 > ", sha512_path).c_str()) != 0) {
+				throw std::runtime_error( //
+					utki::concat("could not calculcate sha512 hash sum of the package ", filename)
+				);
+			}
+			pkg.append_md5(utki::make_string_view(papki::fs_file(md5_path).load()));
+			pkg.append_sha1(utki::make_string_view(papki::fs_file(sha1_path).load()));
+			pkg.append_sha256(utki::make_string_view(papki::fs_file(sha256_path).load()));
+			pkg.append_sha512(utki::make_string_view(papki::fs_file(sha512_path).load()));
+		}
+
+		pkg.append_size(papki::fs_file(pkg_path).size());
 
 		auto pkg_name = pkg.get_name();
 
@@ -229,4 +259,6 @@ void aptian::add(
 		std::cout << "add " << filename << " to the pool" << std::endl;
 		std::filesystem::copy(new_pkg.file_path, filename);
 	}
+
+	// TODO:
 }
