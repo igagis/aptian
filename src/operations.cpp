@@ -73,6 +73,7 @@ constexpr std::string_view tmp_subdir = "tmp/"sv;
 constexpr std::string_view lib_prefix = "lib"sv;
 constexpr std::string_view binary_prefix = "binary-"sv;
 constexpr std::string_view packages_filename = "Packages"sv;
+constexpr std::string_view all_architecture = "all"sv;
 } // namespace
 
 namespace {
@@ -262,6 +263,8 @@ class architectures
 
 	std::string comp_dir;
 
+	bool all_archs_loaded = false;
+
 	auto& load_arch(std::string_view arch)
 	{
 		auto packages_path = utki::cat(this->comp_dir, binary_prefix, arch, '/', packages_filename);
@@ -279,6 +282,23 @@ class architectures
 		ASSERT(res.second)
 
 		return res.first->second;
+	}
+
+	void load_all_archs()
+	{
+		if (this->all_archs_loaded) {
+			return;
+		}
+
+		auto bin_dirs = papki::fs_file(this->comp_dir).list_dir();
+		for (const auto& d : bin_dirs) {
+			if (!d.starts_with(binary_prefix)) {
+				continue;
+			}
+			auto arch = d.substr(binary_prefix.size());
+			this->load_arch(arch);
+		}
+		this->all_archs_loaded = true;
 	}
 
 	auto& get_arch(std::string_view arch)
@@ -301,11 +321,15 @@ public:
 
 		ASSERT(!arch.empty())
 
-		// TODO: handle 'all' arch
-
-		auto& packages = this->get_arch(arch);
-
-		packages.push_back(std::move(pkg));
+		if (arch == all_architecture) {
+			this->load_all_archs();
+			for (auto& a : this->archs) {
+				a.second.push_back(pkg);
+			}
+		} else {
+			auto& packages = this->get_arch(arch);
+			packages.push_back(std::move(pkg));
+		}
 	}
 
 	void write_packages()
@@ -317,6 +341,8 @@ public:
 
 void add_to_architectures(std::vector<unadded_package> packages, const repo_dirs& dirs)
 {
+	// TODO: sort packages so that 'all' architectures go last
+
 	architectures archs(dirs.comp);
 
 	for (auto& p : packages) {
