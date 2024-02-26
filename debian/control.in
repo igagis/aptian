@@ -7,6 +7,7 @@ Build-Depends:
 	dpkg-dev (>=1.17.0),
 	dpkg,
 	coreutils,
+	gzip,
 	prorab,
 	prorab-extra,
 	myci,
@@ -24,6 +25,7 @@ Section: utils
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
 	dpkg,
-	coreutils
+	coreutils,
+	gzip
 Description: APT repository management tool.
  APT repository management tool. Create repository structure, add/remove packages to/from the reporsitory.

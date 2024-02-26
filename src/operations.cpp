@@ -340,12 +340,18 @@ public:
 
 			auto packages_path = utki::cat(bin_dir, packages_filename);
 
-			papki::fs_file packages_file(packages_path);
+            {
+                papki::fs_file packages_file(packages_path);
+                papki::file::guard packages_file_guard(packages_file, papki::file::mode::create);
 
-			papki::file::guard packages_file_guard(packages_file, papki::file::mode::create);
+                // TODO: does Packages file have to be sorted by package name?
+                packages_file.write(to_string(arch.second));
+            }
 
-			// TODO: does Packages file have to be sorted by package name?
-			packages_file.write(to_string(arch.second));
+			// gzip Packages file
+			if (std::system(utki::cat("gzip --keep --force ", packages_path).c_str()) != 0) {
+				throw std::runtime_error(utki::cat("could not gzip ", packages_path, " file"));
+			}
 		}
 	}
 };
