@@ -3,23 +3,25 @@ Section: utils
 Priority: extra
 Maintainer: Ivan Gagis <igagis@gmail.com>
 Build-Depends:
-		debhelper (>= 9),
-		dpkg-dev (>=1.17.0),
-		prorab,
-		prorab-extra,
-		myci,
-		clang-tidy,
-		clang-format,
-		libtst-dev,
-		libpapki-dev,
-		libclargs-dev,
-		libtml-dev
+	debhelper (>= 9),
+	dpkg-dev (>=1.17.0),
+	dpkg,
+	prorab,
+	prorab-extra,
+	myci,
+	clang-tidy,
+	clang-format,
+	libtst-dev,
+	libpapki-dev,
+	libclargs-dev,
+	libtml-dev
 Build-Depends-Indep: doxygen
 Standards-Version: 3.9.2
 
 Package: aptian
 Section: utils
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends},
+	dpkg
 Description: APT repository management tool.
  APT repository management tool. Create repository structure, add/remove packages to/from the reporsitory.

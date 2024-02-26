@@ -23,6 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 #include <papki/fs_file.hpp>
 #include <tml/tree.hpp>
 #include <utki/debug.hpp>
+#include <utki/string.hpp>
 
 #include "packages.hpp"
 
@@ -68,16 +69,6 @@ constexpr std::string_view pool_subdir = "pool/"sv;
 constexpr std::string_view tmp_subdir = "tmp/"sv;
 } // namespace
 
-template <typename... string_like_type>
-std::string concat(const string_like_type&... s)
-{
-	std::stringstream ss;
-
-	(ss << ... << s);
-
-	return ss.str();
-}
-
 void aptian::init(std::string_view dir, std::string_view gpg)
 {
 	ASSERT(!dir.empty())
@@ -100,10 +91,10 @@ void aptian::init(std::string_view dir, std::string_view gpg)
 	std::cout << "initialize APT repository" << std::endl;
 
 	std::cout << "create '" << dists_subdir << "'" << std::endl;
-	papki::fs_file(concat(df.path(), dists_subdir)).make_dir();
+	papki::fs_file(utki::concat(df.path(), dists_subdir)).make_dir();
 
 	std::cout << "create '" << pool_subdir << "'" << std::endl;
-	papki::fs_file(concat(df.path(), pool_subdir)).make_dir();
+	papki::fs_file(utki::concat(df.path(), pool_subdir)).make_dir();
 
 	std::cout << "create " << config_filename << std::endl;
 	{
@@ -128,14 +119,16 @@ void aptian::add(
 	ASSERT(!comp.empty())
 	ASSERT(!packages.empty())
 
-	auto dist_dir = concat(dir, dists_subdir, dist);
-	auto comp_dir = concat(dist_dir, comp);
-	auto pool_dir = concat(dir, pool_subdir, dist, comp);
-	auto tmp_dir = concat(dir, tmp_subdir);
+	auto dist_dir = utki::concat(dir, dists_subdir, dist);
+	auto comp_dir = utki::concat(dist_dir, comp);
+	auto pool_dir = utki::concat(dir, pool_subdir, dist, comp);
+	auto tmp_dir = utki::concat(dir, tmp_subdir);
 
 	std::cout << "dist_dir = " << dist_dir << std::endl;
 	std::cout << "comp_dir = " << comp_dir << std::endl;
 	std::cout << "pool_dir = " << pool_dir << std::endl;
+
+	std::vector<package> new_packages;
 
 	// add each package to the pool
 	for (const auto& p : packages) {
@@ -157,7 +150,7 @@ void aptian::add(
 		}
 		tmp_dir_file.make_dir();
 
-		// extract control information form deb package
+		// extract control information from deb package
 		{
 			std::stringstream ss;
 			ss << "dpkg-deb --control " << p << " " << tmp_dir;
@@ -168,9 +161,15 @@ void aptian::add(
 			}
 		}
 
-		auto control_file_path = concat(tmp_dir, "control");
+		auto control_file_path = utki::concat(tmp_dir, "control");
 		auto control = papki::fs_file(control_file_path).load();
-		// TODO:
-		// package pkg();
+
+		package pkg(utki::make_string_view(control));
+
+		ASSERT(pkg.fields.filename.empty())
+
+		// TODO: find prefix and add to pool
+
+		new_packages.push_back(std::move(pkg));
 	}
 }
