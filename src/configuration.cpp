@@ -33,7 +33,13 @@ constexpr std::string_view config_filename = "aptian.conf"sv;
 } // namespace
 
 configuration::configuration(std::string_view base_repo_dir) :
-	conf(tml::read(papki::fs_file(utki::cat(base_repo_dir, config_filename))))
+	conf([&]() {
+		papki::fs_file file(utki::cat(base_repo_dir, config_filename));
+		if (!file.exists()) {
+			throw std::invalid_argument(utki::cat("could not open ", config_filename, " file. Non-aptian repo?"));
+		}
+		return tml::read(file);
+	}())
 {}
 
 void configuration::create(std::string_view dir, std::string_view gpg)

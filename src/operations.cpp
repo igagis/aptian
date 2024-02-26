@@ -72,6 +72,7 @@ constexpr std::string_view pool_subdir = "pool/"sv;
 constexpr std::string_view tmp_subdir = "tmp/"sv;
 constexpr std::string_view lib_prefix = "lib"sv;
 constexpr std::string_view binary_prefix = "binary-"sv;
+constexpr std::string_view control_filename = "control"sv;
 constexpr std::string_view packages_filename = "Packages"sv;
 constexpr std::string_view all_architecture = "all"sv;
 } // namespace
@@ -105,15 +106,15 @@ void aptian::init( //
 	ASSERT(!dir.empty())
 	ASSERT(!gpg.empty())
 
-	papki::fs_file df(papki::as_dir(dir));
+	papki::fs_file dir_file(papki::as_dir(dir));
 
-	if (!df.exists()) {
+	if (!dir_file.exists()) {
 		std::stringstream ss;
 		ss << "directory '" << dir << "' does not exist";
 		throw std::invalid_argument(ss.str());
 	}
 
-	if (!df.list_dir().empty()) {
+	if (!dir_file.list_dir().empty()) {
 		std::stringstream ss;
 		ss << "directory '" << dir << "' is not empty";
 		throw std::invalid_argument(ss.str());
@@ -122,10 +123,10 @@ void aptian::init( //
 	std::cout << "initialize APT repository" << std::endl;
 
 	std::cout << "create '" << dists_subdir << "'" << std::endl;
-	papki::fs_file(utki::cat(df.path(), dists_subdir)).make_dir();
+	papki::fs_file(utki::cat(dir_file.path(), dists_subdir)).make_dir();
 
 	std::cout << "create '" << pool_subdir << "'" << std::endl;
-	papki::fs_file(utki::cat(df.path(), pool_subdir)).make_dir();
+	papki::fs_file(utki::cat(dir_file.path(), pool_subdir)).make_dir();
 
 	std::cout << "create configuration file" << std::endl;
 	configuration::create(dir, gpg);
@@ -165,17 +166,21 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 		}
 		tmp_dir_file.make_dir();
 
-		// extract control information from deb package
-		{
-			if (std::system(utki::cat("dpkg-deb --control ", pkg_path, " ", dirs.tmp).c_str()) != 0) {
-				throw std::runtime_error(utki::cat("could not extract control information from ", filename));
-			}
+		// extract control information from deb package to tmp directory
+		if (std::system(utki::cat("dpkg-deb --control ", pkg_path, " ", dirs.tmp).c_str()) != 0) {
+			throw std::runtime_error(utki::cat("could not extract control information from ", filename));
 		}
 
-		auto control_file_path = utki::cat(dirs.tmp, "control");
-		auto control = papki::fs_file(control_file_path).load();
-
-		package pkg(utki::trim(utki::make_string_view(control)));
+		package pkg( //
+			utki::trim( //
+				utki::make_string_view( //
+					papki::fs_file( //
+						utki::cat(dirs.tmp, control_filename)
+					)
+						.load()
+				)
+			)
+		);
 
 		// calculate hash sums
 		{
@@ -263,9 +268,8 @@ class architectures
 	{
 		auto packages_path = utki::cat(this->comp_dir, binary_prefix, arch, '/', packages_filename);
 
-		papki::fs_file file(packages_path);
-
 		auto packages = [&]() {
+			papki::fs_file file(packages_path);
 			if (file.exists()) {
 				return aptian::read_packages_file(file);
 			}
@@ -340,13 +344,13 @@ public:
 
 			auto packages_path = utki::cat(bin_dir, packages_filename);
 
-            {
-                papki::fs_file packages_file(packages_path);
-                papki::file::guard packages_file_guard(packages_file, papki::file::mode::create);
+			{
+				papki::fs_file packages_file(packages_path);
+				papki::file::guard packages_file_guard(packages_file, papki::file::mode::create);
 
-                // TODO: does Packages file have to be sorted by package name?
-                packages_file.write(to_string(arch.second));
-            }
+				// TODO: does Packages file have to be sorted by package name?
+				packages_file.write(to_string(arch.second));
+			}
 
 			// gzip Packages file
 			if (std::system(utki::cat("gzip --keep --force ", packages_path).c_str()) != 0) {
@@ -359,8 +363,9 @@ public:
 void add_to_architectures(std::vector<unadded_package> packages, const repo_dirs& dirs)
 {
 	// Sort packages so that 'all' architectures go last.
-	// This is needed to possibly create new architecture Packages files and dirs,
-	// so that then those 'all' packages would be added to those architectures.
+	// This is needed to possibly create new architecture Packages files and dirs by
+	// adding packages to non-'all' architectures, so that then those 'all' packages
+	// would be added to those architectures.
 	std::sort(packages.begin(), packages.end(), [](const auto& p1, const auto& p2) {
 		int p1_prio = p1.pkg.fields.architecture == all_architecture ? 0 : 1;
 		int p2_prio = p2.pkg.fields.architecture == all_architecture ? 0 : 1;
