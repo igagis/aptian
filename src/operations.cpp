@@ -73,6 +73,15 @@ constexpr std::string_view lib_prefix = "lib"sv;
 } // namespace
 
 namespace {
+bool is_aptian_repo(std::string_view dir)
+{
+	return papki::fs_file(utki::concat(dir, dists_subdir)).exists() &&
+		papki::fs_file(utki::concat(dir, pool_subdir)).exists() &&
+		papki::fs_file(utki::concat(dir, config_filename)).exists();
+}
+} // namespace
+
+namespace {
 std::string apt_pool_prefix(std::string_view package_name)
 {
 	ASSERT(!package_name.empty())
@@ -135,6 +144,12 @@ void aptian::add(
 	ASSERT(!comp.empty())
 	ASSERT(!packages.empty())
 
+	if (!is_aptian_repo(dir)) {
+		std::stringstream ss;
+		ss << "given --dir argument is not an aptian repository";
+		throw std::invalid_argument(ss.str());
+	}
+
 	auto dist_dir = utki::concat(dir, dists_subdir, dist);
 	auto comp_dir = utki::concat(dist_dir, comp);
 	auto pool_dir = utki::concat(dir, pool_subdir, dist, comp);
@@ -187,6 +202,13 @@ void aptian::add(
 
 		auto pkg_pool_path = utki::concat(pkg_pool_dir, filename);
 
+		if (papki::fs_file(pkg_pool_path).exists()) {
+			std::stringstream ss;
+			ss << "package " << filename << " already exists in the pool";
+			throw std::runtime_error(ss.str());
+		}
+
+		std::cout << "add " << filename << " to pool" << std::endl;
 		std::filesystem::copy(pkg_path, pkg_pool_path);
 
 		new_packages.push_back(std::move(pkg));
