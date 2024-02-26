@@ -28,6 +28,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 #include <utki/debug.hpp>
 #include <utki/string.hpp>
 
+#include "configuration.hpp"
 #include "packages.hpp"
 
 using namespace std::string_literals;
@@ -66,7 +67,6 @@ pubkey.gpg
 */
 
 namespace {
-constexpr std::string_view config_filename = "aptian.conf"sv;
 constexpr std::string_view dists_subdir = "dists/"sv;
 constexpr std::string_view pool_subdir = "pool/"sv;
 constexpr std::string_view tmp_subdir = "tmp/"sv;
@@ -80,8 +80,7 @@ namespace {
 bool is_aptian_repo(std::string_view dir)
 {
 	return papki::fs_file(utki::cat(dir, dists_subdir)).exists() &&
-		papki::fs_file(utki::cat(dir, pool_subdir)).exists() &&
-		papki::fs_file(utki::cat(dir, config_filename)).exists();
+		papki::fs_file(utki::cat(dir, pool_subdir)).exists();
 }
 } // namespace
 
@@ -128,13 +127,8 @@ void aptian::init( //
 	std::cout << "create '" << pool_subdir << "'" << std::endl;
 	papki::fs_file(utki::cat(df.path(), pool_subdir)).make_dir();
 
-	std::cout << "create " << config_filename << std::endl;
-	{
-		tml::forest cfg = {tml::tree("gpg"s, {tml::tree(gpg)})};
-
-		papki::fs_file cfg_file(df.path() + std::string(config_filename));
-		tml::write(cfg, cfg_file);
-	}
+	std::cout << "create configuration file" << std::endl;
+	configuration::create(dir, gpg);
 
 	std::cout << "done" << std::endl;
 }
