@@ -177,6 +177,7 @@ std::basic_string_view<element_type> trim(std::basic_string_view<element_type> s
 	return trim_front(trim_back(s));
 }
 
+namespace {
 struct repo_dirs {
 	std::string dist;
 	std::string comp; // directory under dist_dir
@@ -189,7 +190,6 @@ struct unadded_package {
 	package pkg;
 };
 
-namespace {
 std::vector<unadded_package> prepare_control_info(utki::span<const std::string> package_paths, const repo_dirs& dirs)
 {
 	std::vector<unadded_package> unadded_packages;
@@ -273,6 +273,32 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 
 	return unadded_packages;
 }
+
+std::vector<package> add_packages_to_pool(utki::span<unadded_package> packages, repo_dirs dirs){
+	std::vector<package> ret;
+
+	// check if any of the package files are already exist in the pool
+	for (const auto& p : packages) {
+		if (papki::fs_file(p.pkg.fields.filename).exists()) {
+			std::stringstream ss;
+			ss << "package " << p.pkg.fields.filename << " already exists in the pool";
+			throw std::invalid_argument(ss.str());
+		}
+	}
+
+	// add packages to the pool
+	for (const auto& p : packages) {
+		const auto& filename = p.pkg.fields.filename;
+		std::filesystem::create_directories(papki::dir(filename));
+
+		std::cout << "add " << filename << " to the pool" << std::endl;
+		std::filesystem::copy(p.file_path, filename);
+
+		ret.push_back(std::move(p.pkg));
+	}
+
+	return ret;
+}
 } // namespace
 
 void aptian::add(
@@ -306,26 +332,10 @@ void aptian::add(
 
 	auto unadded_packages = prepare_control_info(package_paths, dirs);
 
-	// check if any of the package files are already exist in the pool
-	for (const auto& new_pkg : unadded_packages) {
-		if (papki::fs_file(new_pkg.pkg.fields.filename).exists()) {
-			std::stringstream ss;
-			ss << "package " << new_pkg.pkg.fields.filename << " already exists in the pool";
-			throw std::invalid_argument(ss.str());
-		}
-	}
-
-	// add packages to the pool
-	for (const auto& new_pkg : unadded_packages) {
-		const auto& filename = new_pkg.pkg.fields.filename;
-		std::filesystem::create_directories(papki::dir(filename));
-
-		std::cout << "add " << filename << " to the pool" << std::endl;
-		std::filesystem::copy(new_pkg.file_path, filename);
-	}
+	auto packages = add_packages_to_pool(unadded_packages, dirs);
 
 	// add packages to archs
-	// for (const auto& pkg : new_packages){
+	// for (const auto& pkg : packages){
 
 	// }
 
