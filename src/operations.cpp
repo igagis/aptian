@@ -20,6 +20,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 #include "operations.hpp"
 
+#include <filesystem>
+
 #include <papki/fs_file.hpp>
 #include <tml/tree.hpp>
 #include <utki/debug.hpp>
@@ -67,6 +69,20 @@ constexpr std::string_view config_filename = "aptian.conf"sv;
 constexpr std::string_view dists_subdir = "dists/"sv;
 constexpr std::string_view pool_subdir = "pool/"sv;
 constexpr std::string_view tmp_subdir = "tmp/"sv;
+constexpr std::string_view lib_prefix = "lib"sv;
+} // namespace
+
+namespace {
+std::string apt_pool_prefix(std::string_view package_name)
+{
+	ASSERT(!package_name.empty())
+
+	constexpr auto lib_prefix_size = lib_prefix.size() + 1;
+	if (package_name.starts_with(lib_prefix) && package_name.size() >= lib_prefix_size) {
+		return papki::as_dir(package_name.substr(0, lib_prefix_size));
+	}
+	return papki::as_dir(package_name.substr(0, 1));
+}
 } // namespace
 
 void aptian::init(std::string_view dir, std::string_view gpg)
@@ -131,8 +147,8 @@ void aptian::add(
 	std::vector<package> new_packages;
 
 	// add each package to the pool
-	for (const auto& p : packages) {
-		auto filename = papki::not_dir(p);
+	for (const auto& pkg_path : packages) {
+		auto filename = papki::not_dir(pkg_path);
 		auto suffix = papki::suffix(filename);
 		if (suffix != "deb") {
 			std::cout << "unsupported package suffix: ." << suffix << std::endl;
@@ -142,18 +158,14 @@ void aptian::add(
 
 		papki::fs_file tmp_dir_file(tmp_dir);
 		if (tmp_dir_file.exists()) {
-			if (std::remove(tmp_dir_file.path().c_str()) != 0) {
-				std::stringstream ss;
-				ss << "could not delete " << tmp_subdir << " directory";
-				throw std::runtime_error(ss.str());
-			}
+			std::filesystem::remove_all(tmp_dir_file.path());
 		}
 		tmp_dir_file.make_dir();
 
 		// extract control information from deb package
 		{
 			std::stringstream ss;
-			ss << "dpkg-deb --control " << p << " " << tmp_dir;
+			ss << "dpkg-deb --control " << pkg_path << " " << tmp_dir;
 			if (std::system(ss.str().c_str()) != 0) {
 				std::stringstream ss;
 				ss << "could not extract control information from " << filename;
@@ -166,9 +178,16 @@ void aptian::add(
 
 		package pkg(utki::make_string_view(control));
 
-		ASSERT(pkg.fields.filename.empty())
+		auto pkg_name = pkg.get_name();
 
-		// TODO: find prefix and add to pool
+		auto pkg_pool_dir = utki::concat(pool_dir, apt_pool_prefix(pkg_name), papki::as_dir(pkg_name));
+
+		std::cout << "pkg_pool_dir = " << pkg_pool_dir << std::endl;
+		std::filesystem::create_directories(pkg_pool_dir);
+
+		auto pkg_pool_path = utki::concat(pkg_pool_dir, filename);
+
+		std::filesystem::copy(pkg_path, pkg_pool_path);
 
 		new_packages.push_back(std::move(pkg));
 	}

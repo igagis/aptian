@@ -47,6 +47,8 @@ public:
 
 	std::string to_string() const;
 
+	std::string get_name() const;
+
 	bool operator==(const package& p) const
 	{
 		return this->control == p.control;

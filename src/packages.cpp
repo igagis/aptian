@@ -84,6 +84,15 @@ std::string package::to_string() const
 	return ss.str();
 }
 
+std::string package::get_name() const
+{
+	if (!this->fields.source.empty()) {
+		return std::string(this->fields.source);
+	}
+	ASSERT(!this->fields.package.empty())
+	return std::string(this->fields.package);
+}
+
 namespace {
 class parser
 {
