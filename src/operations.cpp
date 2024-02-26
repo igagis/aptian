@@ -21,6 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 #include "operations.hpp"
 
 #include <filesystem>
+#include <map>
 
 #include <papki/fs_file.hpp>
 #include <tml/tree.hpp>
@@ -70,6 +71,8 @@ constexpr std::string_view dists_subdir = "dists/"sv;
 constexpr std::string_view pool_subdir = "pool/"sv;
 constexpr std::string_view tmp_subdir = "tmp/"sv;
 constexpr std::string_view lib_prefix = "lib"sv;
+constexpr std::string_view binary_prefix = "binary-"sv;
+constexpr std::string_view packages_filename = "Packages"sv;
 } // namespace
 
 namespace {
@@ -274,9 +277,8 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 	return unadded_packages;
 }
 
-std::vector<package> add_packages_to_pool(utki::span<unadded_package> packages, repo_dirs dirs){
-	std::vector<package> ret;
-
+void add_packages_to_pool(utki::span<const unadded_package> packages, const repo_dirs& dirs)
+{
 	// check if any of the package files are already exist in the pool
 	for (const auto& p : packages) {
 		if (papki::fs_file(p.pkg.fields.filename).exists()) {
@@ -293,12 +295,79 @@ std::vector<package> add_packages_to_pool(utki::span<unadded_package> packages, 
 
 		std::cout << "add " << filename << " to the pool" << std::endl;
 		std::filesystem::copy(p.file_path, filename);
+	}
+}
 
-		ret.push_back(std::move(p.pkg));
+class architectures
+{
+	std::map<std::string, std::vector<package>, std::less<>> archs;
+
+	std::string comp_dir;
+
+	auto& load_arch(std::string_view arch)
+	{
+		auto packages_path = utki::concat(this->comp_dir, binary_prefix, arch, '/', packages_filename);
+
+		papki::fs_file file(packages_path);
+
+		auto packages = [&]() {
+			if (file.exists()) {
+				return aptian::read_packages_file(file);
+			}
+			return decltype(archs)::value_type::second_type();
+		}();
+
+		auto res = this->archs.insert(decltype(archs)::value_type(arch, std::move(packages)));
+		ASSERT(res.second)
+
+		return res.first->second;
 	}
 
-	return ret;
+	auto& get_arch(std::string_view arch)
+	{
+		auto i = this->archs.find(arch);
+		if (i == this->archs.end()) {
+			return this->load_arch(arch);
+		}
+		return i->second;
+	}
+
+public:
+	architectures(std::string comp_dir) :
+		comp_dir(std::move(comp_dir))
+	{}
+
+	void add(package pkg)
+	{
+		const auto& arch = pkg.fields.architecture;
+
+		ASSERT(!arch.empty())
+
+		// TODO: handle 'all' arch
+
+		auto& packages = this->get_arch(arch);
+
+		packages.push_back(std::move(pkg));
+	}
+
+	void write_packages()
+	{
+		// TODO: does Packages file have to be sorted by package name?
+		// TODO: write
+	}
+};
+
+void add_to_architectures(std::vector<unadded_package> packages, const repo_dirs& dirs)
+{
+	architectures archs(dirs.comp);
+
+	for (auto& p : packages) {
+		archs.add(std::move(p.pkg));
+	}
+
+	archs.write_packages();
 }
+
 } // namespace
 
 void aptian::add(
@@ -332,12 +401,9 @@ void aptian::add(
 
 	auto unadded_packages = prepare_control_info(package_paths, dirs);
 
-	auto packages = add_packages_to_pool(unadded_packages, dirs);
+	add_packages_to_pool(unadded_packages, dirs);
 
-	// add packages to archs
-	// for (const auto& pkg : packages){
-
-	// }
+	add_to_architectures(std::move(unadded_packages), dirs);
 
 	// TODO:
 }
