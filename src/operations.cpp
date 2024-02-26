@@ -132,6 +132,47 @@ void aptian::init(std::string_view dir, std::string_view gpg)
 	std::cout << "done" << std::endl;
 }
 
+template <typename element_type>
+std::basic_string_view<element_type> trim_front(std::basic_string_view<element_type> s)
+{
+	return s.substr( //
+		std::distance( //
+			s.begin(),
+			std::find_if( //
+				s.begin(),
+				s.end(),
+				[](auto c) {
+					return !std::isspace(c);
+				}
+			)
+		)
+	);
+}
+
+template <typename element_type>
+std::basic_string_view<element_type> trim_back(std::basic_string_view<element_type> s)
+{
+	return s.substr( //
+		0,
+		std::distance( //
+			s.begin(),
+			std::find_if( //
+				s.rbegin(),
+				s.rend(),
+				[](auto c) {
+					return !std::isspace(c);
+				}
+			).base()
+		)
+	);
+}
+
+template <typename element_type>
+std::basic_string_view<element_type> trim(std::basic_string_view<element_type> s)
+{
+	return trim_front(trim_back(s));
+}
+
 void aptian::add(
 	std::string_view dir,
 	std::string_view dist,
@@ -220,13 +261,15 @@ void aptian::add(
 					utki::concat("could not calculcate sha512 hash sum of the package ", filename)
 				);
 			}
-			pkg.append_md5(utki::make_string_view(papki::fs_file(md5_path).load()));
-			pkg.append_sha1(utki::make_string_view(papki::fs_file(sha1_path).load()));
-			pkg.append_sha256(utki::make_string_view(papki::fs_file(sha256_path).load()));
-			pkg.append_sha512(utki::make_string_view(papki::fs_file(sha512_path).load()));
+			pkg.append_md5(trim(utki::make_string_view(papki::fs_file(md5_path).load())));
+			pkg.append_sha1(trim(utki::make_string_view(papki::fs_file(sha1_path).load())));
+			pkg.append_sha256(trim(utki::make_string_view(papki::fs_file(sha256_path).load())));
+			pkg.append_sha512(trim(utki::make_string_view(papki::fs_file(sha512_path).load())));
 		}
 
 		pkg.append_size(papki::fs_file(pkg_path).size());
+		std::cout << "control = " << std::endl;
+		std::cout << pkg.to_string();
 
 		auto pkg_name = pkg.get_name();
 
