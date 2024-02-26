@@ -335,7 +335,14 @@ public:
 
 void add_to_architectures(std::vector<unadded_package> packages, const repo_dirs& dirs)
 {
-	// TODO: sort packages so that 'all' architectures go last
+	// Sort packages so that 'all' architectures go last.
+	// This is needed to possibly create new architecture Packages files and dirs,
+	// so that then those 'all' packages would be added to those architectures.
+	std::sort(packages.begin(), packages.end(), [](const auto& p1, const auto& p2) {
+		int p1_prio = p1.pkg.fields.architecture == all_architecture ? 0 : 1;
+		int p2_prio = p2.pkg.fields.architecture == all_architecture ? 0 : 1;
+		return p1_prio < p2_prio;
+	});
 
 	architectures archs(dirs.comp);
 
