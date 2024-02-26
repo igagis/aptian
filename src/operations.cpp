@@ -96,8 +96,7 @@ std::string apt_pool_prefix(std::string_view package_name)
 
 void aptian::init( //
 	std::string_view dir,
-	std::string_view gpg,
-	utki::span<const std::string> initial_archs
+	std::string_view gpg
 )
 {
 	ASSERT(!dir.empty())
@@ -121,8 +120,6 @@ void aptian::init( //
 
 	std::cout << "create '" << dists_subdir << "'" << std::endl;
 	papki::fs_file(utki::concat(df.path(), dists_subdir)).make_dir();
-
-	// TODO: create architecture dirs
 
 	std::cout << "create '" << pool_subdir << "'" << std::endl;
 	papki::fs_file(utki::concat(df.path(), pool_subdir)).make_dir();
@@ -180,42 +177,24 @@ std::basic_string_view<element_type> trim(std::basic_string_view<element_type> s
 	return trim_front(trim_back(s));
 }
 
-void aptian::add(
-	std::string_view dir,
-	std::string_view dist,
-	std::string_view comp,
-	utki::span<const std::string> packages
-)
+struct repo_dirs {
+	std::string dist;
+	std::string comp; // directory under dist_dir
+	std::string pool;
+	std::string tmp;
+};
+
+struct unadded_package {
+	std::string file_path;
+	package pkg;
+};
+
+namespace {
+std::vector<unadded_package> prepare_control_info(utki::span<const std::string> package_paths, const repo_dirs& dirs)
 {
-	ASSERT(!dir.empty())
-	ASSERT(!dist.empty())
-	ASSERT(!comp.empty())
-	ASSERT(!packages.empty())
+	std::vector<unadded_package> unadded_packages;
 
-	if (!is_aptian_repo(dir)) {
-		std::stringstream ss;
-		ss << "given --dir argument is not an aptian repository";
-		throw std::invalid_argument(ss.str());
-	}
-
-	auto dist_dir = utki::concat(dir, dists_subdir, dist);
-	auto comp_dir = utki::concat(dist_dir, comp);
-	auto pool_dir = utki::concat(dir, pool_subdir, dist, comp);
-	auto tmp_dir = utki::concat(dir, tmp_subdir);
-
-	std::cout << "dist_dir = " << dist_dir << std::endl;
-	std::cout << "comp_dir = " << comp_dir << std::endl;
-	std::cout << "pool_dir = " << pool_dir << std::endl;
-
-	struct new_package {
-		std::string file_path;
-		package pkg;
-	};
-
-	std::vector<new_package> new_packages;
-
-	// add each package to the pool
-	for (const auto& pkg_path : packages) {
+	for (const auto& pkg_path : package_paths) {
 		auto filename = papki::not_dir(pkg_path);
 		auto suffix = papki::suffix(filename);
 		if (suffix != "deb") {
@@ -224,7 +203,7 @@ void aptian::add(
 			continue;
 		}
 
-		papki::fs_file tmp_dir_file(tmp_dir);
+		papki::fs_file tmp_dir_file(dirs.tmp);
 		if (tmp_dir_file.exists()) {
 			std::filesystem::remove_all(tmp_dir_file.path());
 		}
@@ -232,22 +211,22 @@ void aptian::add(
 
 		// extract control information from deb package
 		{
-			if (std::system(utki::concat("dpkg-deb --control ", pkg_path, " ", tmp_dir).c_str()) != 0) {
+			if (std::system(utki::concat("dpkg-deb --control ", pkg_path, " ", dirs.tmp).c_str()) != 0) {
 				throw std::runtime_error(utki::concat("could not extract control information from ", filename));
 			}
 		}
 
-		auto control_file_path = utki::concat(tmp_dir, "control");
+		auto control_file_path = utki::concat(dirs.tmp, "control");
 		auto control = papki::fs_file(control_file_path).load();
 
 		package pkg(trim(utki::make_string_view(control)));
 
 		// calculate hash sums
 		{
-			auto md5_path = utki::concat(tmp_dir, "md5");
-			auto sha1_path = utki::concat(tmp_dir, "sha1");
-			auto sha256_path = utki::concat(tmp_dir, "sha256");
-			auto sha512_path = utki::concat(tmp_dir, "sha512");
+			auto md5_path = utki::concat(dirs.tmp, "md5");
+			auto sha1_path = utki::concat(dirs.tmp, "sha1");
+			auto sha256_path = utki::concat(dirs.tmp, "sha256");
+			auto sha512_path = utki::concat(dirs.tmp, "sha512");
 			if (std::system(utki::concat("md5sum ", pkg_path, " | cut -d\" \" -f1 > ", md5_path).c_str()) != 0) {
 				throw std::runtime_error( //
 					utki::concat("could not calculcate md5 hash sum of the package ", filename)
@@ -280,20 +259,55 @@ void aptian::add(
 
 		auto pkg_name = pkg.get_name();
 
-		auto pkg_pool_dir = utki::concat(pool_dir, apt_pool_prefix(pkg_name), papki::as_dir(pkg_name));
+		auto pkg_pool_dir = utki::concat(dirs.pool, apt_pool_prefix(pkg_name), papki::as_dir(pkg_name));
 
 		auto pkg_pool_path = utki::concat(pkg_pool_dir, filename);
 
 		pkg.append_filename(pkg_pool_path);
 
-		new_packages.push_back({//
-								.file_path = pkg_path,
-								.pkg = std::move(pkg)
+		unadded_packages.push_back({//
+									.file_path = pkg_path,
+									.pkg = std::move(pkg)
 		});
 	}
 
+	return unadded_packages;
+}
+} // namespace
+
+void aptian::add(
+	std::string_view dir,
+	std::string_view dist,
+	std::string_view comp,
+	utki::span<const std::string> package_paths
+)
+{
+	ASSERT(!dir.empty())
+	ASSERT(!dist.empty())
+	ASSERT(!comp.empty())
+	ASSERT(!package_paths.empty())
+
+	if (!is_aptian_repo(dir)) {
+		std::stringstream ss;
+		ss << "given --dir argument is not an aptian repository";
+		throw std::invalid_argument(ss.str());
+	}
+
+	repo_dirs dirs = {
+		.dist = utki::concat(dir, dists_subdir, dist),
+		.comp = utki::concat(dirs.dist, comp),
+		.pool = utki::concat(dir, pool_subdir, dist, comp),
+		.tmp = utki::concat(dir, tmp_subdir)
+	};
+
+	std::cout << "dirs.dist = " << dirs.dist << std::endl;
+	std::cout << "dirs.comp = " << dirs.comp << std::endl;
+	std::cout << "dirs.pool = " << dirs.pool << std::endl;
+
+	auto unadded_packages = prepare_control_info(package_paths, dirs);
+
 	// check if any of the package files are already exist in the pool
-	for (const auto& new_pkg : new_packages) {
+	for (const auto& new_pkg : unadded_packages) {
 		if (papki::fs_file(new_pkg.pkg.fields.filename).exists()) {
 			std::stringstream ss;
 			ss << "package " << new_pkg.pkg.fields.filename << " already exists in the pool";
@@ -302,13 +316,18 @@ void aptian::add(
 	}
 
 	// add packages to the pool
-	for (const auto& new_pkg : new_packages) {
+	for (const auto& new_pkg : unadded_packages) {
 		const auto& filename = new_pkg.pkg.fields.filename;
 		std::filesystem::create_directories(papki::dir(filename));
 
 		std::cout << "add " << filename << " to the pool" << std::endl;
 		std::filesystem::copy(new_pkg.file_path, filename);
 	}
+
+	// add packages to archs
+	// for (const auto& pkg : new_packages){
+
+	// }
 
 	// TODO:
 }

@@ -37,7 +37,6 @@ void handle_init_command(utki::span<const char* const> args)
 	bool help = false;
 	std::string dir;
 	std::string gpg;
-	std::vector<std::string> archs;
 
 	clargs::parser p;
 
@@ -68,15 +67,6 @@ void handle_init_command(utki::span<const char* const> args)
 		}
 	);
 
-	p.add( //
-		'a',
-		"archs"s,
-		"comma separated list of initial repository architectures, e.g. amd64,armhf,i386. Optional."s,
-		[&](std::string_view v) {
-			archs = utki::split(v, ',');
-		}
-	);
-
 	p.parse(args);
 
 	if (help) {
@@ -92,7 +82,7 @@ void handle_init_command(utki::span<const char* const> args)
 		throw std::invalid_argument("--gpg argument is not given");
 	}
 
-	init(papki::as_dir(dir), gpg, archs);
+	init(papki::as_dir(dir), gpg);
 }
 } // namespace
 

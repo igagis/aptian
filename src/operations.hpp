@@ -28,15 +28,14 @@ namespace aptian {
 
 void init( //
 	std::string_view dir,
-	std::string_view gpg,
-	utki::span<const std::string> initial_archs
+	std::string_view gpg
 );
 
 void add( //
 	std::string_view dir,
 	std::string_view dist,
 	std::string_view comp,
-	utki::span<const std::string> packages
+	utki::span<const std::string> package_paths
 );
 
 } // namespace aptian
