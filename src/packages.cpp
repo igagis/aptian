@@ -187,7 +187,7 @@ class parser
 public:
 	std::vector<package> packages;
 
-	void parse(papki::file& fi)
+	void parse(const papki::file& fi)
 	{
 		papki::file::guard file_guard(fi, papki::file::mode::read);
 
@@ -209,7 +209,7 @@ public:
 };
 } // namespace
 
-std::vector<package> aptian::read_packages_file(papki::file& fi)
+std::vector<package> aptian::read_packages_file(const papki::file& fi)
 {
 	parser p;
 	p.parse(fi);

@@ -75,7 +75,7 @@ public:
 static_assert(std::is_move_constructible_v<package>, "class package must be movable");
 static_assert(std::is_move_assignable_v<package>, "class package must be movable");
 
-std::vector<package> read_packages_file(papki::file& fi);
+std::vector<package> read_packages_file(const papki::file& fi);
 
 std::string to_string(utki::span<const package> packages);
 
