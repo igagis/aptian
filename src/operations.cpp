@@ -233,7 +233,7 @@ void aptian::add(
 		auto control_file_path = utki::concat(tmp_dir, "control");
 		auto control = papki::fs_file(control_file_path).load();
 
-		package pkg(utki::make_string_view(control));
+		package pkg(trim(utki::make_string_view(control)));
 
 		// calculate hash sums
 		{
