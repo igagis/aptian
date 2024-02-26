@@ -35,35 +35,28 @@ constexpr std::string_view version_entry = "Version: "sv;
 constexpr std::string_view source_entry = "Source: "sv;
 } // namespace
 
-package::package(decltype(control) control) :
-	control(std::move(control)),
+package::package(std::string_view control) :
+	control(utki::split(control, '\n')),
 	fields([this]() {
 		control_fields ret;
 
-		utki::string_parser p(utki::make_string_view(this->control));
-
-		for (;;) {
-			auto line = p.read_chars_until('\n');
-
+		for (std::string_view line : this->control) {
 			if (line.starts_with(package_entry)) {
 				ret.package = line.substr(package_entry.size());
-				std::cout << "package entry found: " << ret.package << std::endl;
+				// std::cout << "package entry found: " << ret.package << std::endl;
 			}
 			if (line.starts_with(filename_entry)) {
 				ret.filename = line.substr(filename_entry.size());
+				// std::cout << "filename entry found: " << ret.filename << std::endl;
 			}
 			if (line.starts_with(version_entry)) {
 				ret.version = line.substr(version_entry.size());
+				// std::cout << "version entry found: " << ret.version << std::endl;
 			}
 			if (line.starts_with(source_entry)) {
 				ret.source = line.substr(source_entry.size());
+				// std::cout << "source entry found: " << ret.source << std::endl;
 			}
-
-			if (p.empty()) {
-				break;
-			}
-
-			p.read_char(); // read the '\n' char
 		}
 
 		if (ret.package.empty()) {
@@ -76,6 +69,17 @@ package::package(decltype(control) control) :
 		return ret;
 	}())
 {}
+
+std::string package::to_string() const
+{
+	std::stringstream ss;
+
+	for (const auto& line : this->control) {
+		ss << line << '\n';
+	}
+
+	return ss.str();
+}
 
 namespace {
 class parser
@@ -94,12 +98,12 @@ class parser
 				if (this->line_start) {
 					// package parsed
 					if (!this->buf.empty()) {
-						this->packages.emplace_back(std::move(this->buf));
-						ASSERT(this->buf.empty())
-
+						this->packages.emplace_back(utki::make_string_view(this->buf));
+						this->buf.clear();
 						// std::cout << "package read:" << '\n';
 						// std::cout << this->packages.back().to_string();
 					}
+					ASSERT(this->buf.empty())
 				} else {
 					if (!this->buf.empty()) {
 						this->buf.push_back(c);

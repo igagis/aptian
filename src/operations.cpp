@@ -68,6 +68,16 @@ constexpr std::string_view pool_subdir = "pool/"sv;
 constexpr std::string_view tmp_subdir = "tmp/"sv;
 } // namespace
 
+template <typename... string_like_type>
+std::string concat(const string_like_type&... s)
+{
+	std::stringstream ss;
+
+	(ss << ... << s);
+
+	return ss.str();
+}
+
 void aptian::init(std::string_view dir, std::string_view gpg)
 {
 	ASSERT(!dir.empty())
@@ -90,10 +100,10 @@ void aptian::init(std::string_view dir, std::string_view gpg)
 	std::cout << "initialize APT repository" << std::endl;
 
 	std::cout << "create '" << dists_subdir << "'" << std::endl;
-	papki::fs_file((std::stringstream() << df.path() << dists_subdir).str()).make_dir();
+	papki::fs_file(concat(df.path(), dists_subdir)).make_dir();
 
 	std::cout << "create '" << pool_subdir << "'" << std::endl;
-	papki::fs_file((std::stringstream() << df.path() << pool_subdir).str()).make_dir();
+	papki::fs_file(concat(df.path(), pool_subdir)).make_dir();
 
 	std::cout << "create " << config_filename << std::endl;
 	{
@@ -118,10 +128,10 @@ void aptian::add(
 	ASSERT(!comp.empty())
 	ASSERT(!packages.empty())
 
-	auto dist_dir = (std::stringstream() << dir << dists_subdir << dist).str();
-	auto comp_dir = (std::stringstream() << dist_dir << comp).str();
-	auto pool_dir = (std::stringstream() << dir << pool_subdir << dist << comp).str();
-	auto tmp_dir = (std::stringstream() << dir << tmp_subdir).str();
+	auto dist_dir = concat(dir, dists_subdir, dist);
+	auto comp_dir = concat(dist_dir, comp);
+	auto pool_dir = concat(dir, pool_subdir, dist, comp);
+	auto tmp_dir = concat(dir, tmp_subdir);
 
 	std::cout << "dist_dir = " << dist_dir << std::endl;
 	std::cout << "comp_dir = " << comp_dir << std::endl;
@@ -158,10 +168,9 @@ void aptian::add(
 			}
 		}
 
-        auto control_file_path = (std::stringstream() << tmp_dir << "control").str();
-        auto control = papki::fs_file(control_file_path).load();
-        // TODO:
-        // package pkg();
-
+		auto control_file_path = concat(tmp_dir, "control");
+		auto control = papki::fs_file(control_file_path).load();
+		// TODO:
+		// package pkg();
 	}
 }

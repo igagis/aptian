@@ -27,10 +27,7 @@ namespace aptian {
 
 class package
 {
-	// use vector instead of std::string because
-	// in case std:string has small-string-optimization then when moving the object
-	// saved string_view's will be invalidated, we don't want that here
-	std::vector<char> control;
+	std::vector<std::string> control;
 
 public:
 	struct control_fields {
@@ -42,12 +39,9 @@ public:
 
 	control_fields fields;
 
-	package(decltype(control) control);
+	package(std::string_view control);
 
-	std::string_view to_string() const
-	{
-		return utki::make_string_view(this->control);
-	}
+	std::string to_string() const;
 
 	bool operator==(const package& p) const
 	{
