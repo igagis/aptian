@@ -22,6 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 #include <clargs/parser.hpp>
 #include <papki/util.hpp>
+#include <utki/string.hpp>
 
 #include "operations.hpp"
 
@@ -36,21 +37,45 @@ void handle_init_command(utki::span<const char* const> args)
 	bool help = false;
 	std::string dir;
 	std::string gpg;
+	std::vector<std::string> archs;
 
 	clargs::parser p;
 
-	p.add("help"s, "show 'init' command help information", [&]() {
-		help = true;
-		p.stop();
-	});
+	p.add( //
+		"help"s,
+		"show 'init' command help information"s,
+		[&]() {
+			help = true;
+			p.stop();
+		}
+	);
 
-	p.add('d', "dir"s, "path to base directory for repository structure. Must be empty.", [&](std::string_view v) {
-		dir = v;
-	});
+	p.add( //
+		'd',
+		"dir"s,
+		"path to base directory for repository structure, must be empty"s,
+		[&](std::string_view v) {
+			dir = v;
+		}
+	);
 
-	p.add('k', "gpg", "GPG key to use for signing", [&](std::string_view v) {
-		gpg = v;
-	});
+	p.add( //
+		'k',
+		"gpg"s,
+		"GPG key to use for signing"s,
+		[&](std::string_view v) {
+			gpg = v;
+		}
+	);
+
+	p.add( //
+		'a',
+		"archs"s,
+		"comma separated list of initial repository architectures, e.g. amd64,armhf,i386. Optional."s,
+		[&](std::string_view v) {
+			archs = utki::split(v, ',');
+		}
+	);
 
 	p.parse(args);
 
@@ -67,7 +92,7 @@ void handle_init_command(utki::span<const char* const> args)
 		throw std::invalid_argument("--gpg argument is not given");
 	}
 
-	init(papki::as_dir(dir), gpg);
+	init(papki::as_dir(dir), gpg, archs);
 }
 } // namespace
 

@@ -94,7 +94,11 @@ std::string apt_pool_prefix(std::string_view package_name)
 }
 } // namespace
 
-void aptian::init(std::string_view dir, std::string_view gpg)
+void aptian::init( //
+	std::string_view dir,
+	std::string_view gpg,
+	utki::span<const std::string> initial_archs
+)
 {
 	ASSERT(!dir.empty())
 	ASSERT(!gpg.empty())
@@ -118,6 +122,8 @@ void aptian::init(std::string_view dir, std::string_view gpg)
 	std::cout << "create '" << dists_subdir << "'" << std::endl;
 	papki::fs_file(utki::concat(df.path(), dists_subdir)).make_dir();
 
+	// TODO: create architecture dirs
+
 	std::cout << "create '" << pool_subdir << "'" << std::endl;
 	papki::fs_file(utki::concat(df.path(), pool_subdir)).make_dir();
 
@@ -132,6 +138,7 @@ void aptian::init(std::string_view dir, std::string_view gpg)
 	std::cout << "done" << std::endl;
 }
 
+// TODO: use utki::trim
 template <typename element_type>
 std::basic_string_view<element_type> trim_front(std::basic_string_view<element_type> s)
 {
