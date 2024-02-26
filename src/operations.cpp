@@ -159,7 +159,12 @@ void aptian::add(
 	std::cout << "comp_dir = " << comp_dir << std::endl;
 	std::cout << "pool_dir = " << pool_dir << std::endl;
 
-	std::vector<package> new_packages;
+	struct new_package {
+		std::string file_path;
+		package pkg;
+	};
+
+	std::vector<new_package> new_packages;
 
 	// add each package to the pool
 	for (const auto& pkg_path : packages) {
@@ -197,20 +202,31 @@ void aptian::add(
 
 		auto pkg_pool_dir = utki::concat(pool_dir, apt_pool_prefix(pkg_name), papki::as_dir(pkg_name));
 
-		std::cout << "pkg_pool_dir = " << pkg_pool_dir << std::endl;
-		std::filesystem::create_directories(pkg_pool_dir);
-
 		auto pkg_pool_path = utki::concat(pkg_pool_dir, filename);
 
-		if (papki::fs_file(pkg_pool_path).exists()) {
+		pkg.append_filename(pkg_pool_path);
+
+		new_packages.push_back({//
+								.file_path = pkg_path,
+								.pkg = std::move(pkg)
+		});
+	}
+
+	// check if any of the package files are already exist in the pool
+	for (const auto& new_pkg : new_packages) {
+		if (papki::fs_file(new_pkg.pkg.fields.filename).exists()) {
 			std::stringstream ss;
-			ss << "package " << filename << " already exists in the pool";
-			throw std::runtime_error(ss.str());
+			ss << "package " << new_pkg.pkg.fields.filename << " already exists in the pool";
+			throw std::invalid_argument(ss.str());
 		}
+	}
 
-		std::cout << "add " << filename << " to pool" << std::endl;
-		std::filesystem::copy(pkg_path, pkg_pool_path);
+	// add packages to the pool
+	for (const auto& new_pkg : new_packages) {
+		const auto& filename = new_pkg.pkg.fields.filename;
+		std::filesystem::create_directories(papki::dir(filename));
 
-		new_packages.push_back(std::move(pkg));
+		std::cout << "add " << filename << " to the pool" << std::endl;
+		std::filesystem::copy(new_pkg.file_path, filename);
 	}
 }

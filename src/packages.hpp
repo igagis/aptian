@@ -51,6 +51,8 @@ public:
 
 	std::string get_name() const;
 
+	void append_filename(std::string_view pool_path);
+
 	bool operator==(const package& p) const
 	{
 		return this->control == p.control;

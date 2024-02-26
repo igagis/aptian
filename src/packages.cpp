@@ -101,6 +101,17 @@ std::string package::get_name() const
 	return std::string(this->fields.package);
 }
 
+void package::append_filename(std::string_view pool_path)
+{
+	ASSERT(!pool_path.empty())
+	if (!this->fields.filename.empty()) {
+		throw std::logic_error("could not append filename, the package control already has Filename field");
+	}
+
+	this->control.push_back(utki::concat(filename_entry, pool_path));
+	this->fields.filename = std::string_view(this->control.back()).substr(filename_entry.size());
+}
+
 namespace {
 class parser
 {
