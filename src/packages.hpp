@@ -32,8 +32,10 @@ class package
 public:
 	struct control_fields {
 		std::string_view package;
-		std::string_view source;
 		std::string_view version;
+		std::string_view architecture;
+
+		std::string_view source;
 		std::string_view filename;
 	};
 

@@ -33,6 +33,7 @@ constexpr std::string_view package_entry = "Package: "sv;
 constexpr std::string_view filename_entry = "Filename: "sv;
 constexpr std::string_view version_entry = "Version: "sv;
 constexpr std::string_view source_entry = "Source: "sv;
+constexpr std::string_view architecture_entry = "Architecture: "sv;
 } // namespace
 
 package::package(std::string_view control) :
@@ -61,6 +62,10 @@ package::control_fields package::parse(utki::span<const std::string> control)
 			ret.source = line.substr(source_entry.size());
 			// std::cout << "source entry found: " << ret.source << std::endl;
 		}
+		if (line.starts_with(architecture_entry)) {
+			ret.architecture = line.substr(architecture_entry.size());
+			// std::cout << "source entry found: " << ret.source << std::endl;
+		}
 	}
 
 	if (ret.package.empty()) {
@@ -68,6 +73,9 @@ package::control_fields package::parse(utki::span<const std::string> control)
 	}
 	if (ret.version.empty()) {
 		throw std::invalid_argument("Package control file doesn't have 'Version:' entry");
+	}
+	if (ret.architecture.empty()) {
+		throw std::invalid_argument("Package control file doesn't have 'Architecture:' entry");
 	}
 
 	return ret;
