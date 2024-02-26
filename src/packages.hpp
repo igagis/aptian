@@ -37,6 +37,10 @@ public:
 		std::string_view filename;
 	};
 
+private:
+	static control_fields parse(utki::span<const std::string> control);
+
+public:
 	control_fields fields;
 
 	package(std::string_view control);

@@ -37,38 +37,41 @@ constexpr std::string_view source_entry = "Source: "sv;
 
 package::package(std::string_view control) :
 	control(utki::split(control, '\n')),
-	fields([this]() {
-		control_fields ret;
-
-		for (std::string_view line : this->control) {
-			if (line.starts_with(package_entry)) {
-				ret.package = line.substr(package_entry.size());
-				// std::cout << "package entry found: " << ret.package << std::endl;
-			}
-			if (line.starts_with(filename_entry)) {
-				ret.filename = line.substr(filename_entry.size());
-				// std::cout << "filename entry found: " << ret.filename << std::endl;
-			}
-			if (line.starts_with(version_entry)) {
-				ret.version = line.substr(version_entry.size());
-				// std::cout << "version entry found: " << ret.version << std::endl;
-			}
-			if (line.starts_with(source_entry)) {
-				ret.source = line.substr(source_entry.size());
-				// std::cout << "source entry found: " << ret.source << std::endl;
-			}
-		}
-
-		if (ret.package.empty()) {
-			throw std::invalid_argument("Package control file doesn't have 'Package:' entry");
-		}
-		if (ret.version.empty()) {
-			throw std::invalid_argument("Package control file doesn't have 'Version:' entry");
-		}
-
-		return ret;
-	}())
+	fields(parse(this->control))
 {}
+
+package::control_fields package::parse(utki::span<const std::string> control)
+{
+	control_fields ret;
+
+	for (std::string_view line : control) {
+		if (line.starts_with(package_entry)) {
+			ret.package = line.substr(package_entry.size());
+			// std::cout << "package entry found: " << ret.package << std::endl;
+		}
+		if (line.starts_with(filename_entry)) {
+			ret.filename = line.substr(filename_entry.size());
+			// std::cout << "filename entry found: " << ret.filename << std::endl;
+		}
+		if (line.starts_with(version_entry)) {
+			ret.version = line.substr(version_entry.size());
+			// std::cout << "version entry found: " << ret.version << std::endl;
+		}
+		if (line.starts_with(source_entry)) {
+			ret.source = line.substr(source_entry.size());
+			// std::cout << "source entry found: " << ret.source << std::endl;
+		}
+	}
+
+	if (ret.package.empty()) {
+		throw std::invalid_argument("Package control file doesn't have 'Package:' entry");
+	}
+	if (ret.version.empty()) {
+		throw std::invalid_argument("Package control file doesn't have 'Version:' entry");
+	}
+
+	return ret;
+}
 
 std::string package::to_string() const
 {
