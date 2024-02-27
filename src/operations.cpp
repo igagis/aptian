@@ -60,8 +60,6 @@ pool
 				<package-source-name>
 					<package-files>
 aptian.conf
-keyring.gpg
-pubkey.gpg
 
 */
 
