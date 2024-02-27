@@ -70,8 +70,17 @@ void handle_init_command(utki::span<const char* const> args)
 	p.parse(args);
 
 	if (help) {
-		// TODO: write help message
-		std::cout << "" << std::endl;
+		std::cout << "initialize APT repository" << '\n';
+		std::cout << '\n';
+		std::cout << "Usage:" << '\n';
+		std::cout << "  aptian init --dir=<base-repo-dir> --gpg=<gpg-key>" << '\n';
+		std::cout << '\n';
+		std::cout << "Options:" << '\n';
+		std::cout << p.description();
+		std::cout << '\n';
+		std::cout << "Example:" << '\n';
+		std::cout << "  aptian init --dir=/var/www/repo/ --gpg=mailbox@somemail.com" << '\n';
+		std::cout << std::endl;
 		return;
 	}
 
