@@ -38,6 +38,8 @@ using namespace aptian;
 
 /*
 
+TODO: source repository is not supported at the moment, only binary.
+
 APT repository directory structure:
 
 dists
@@ -46,11 +48,6 @@ dists
 			binary-<archs>
 				Packages
 				Packages.gz
-				Release
-			[binary-source]
-				Packages
-				Packages.gz
-				Release
 		InRelease
 		Release
 		Release.gpg
@@ -233,7 +230,9 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 
 	return unadded_packages;
 }
+} // namespace
 
+namespace {
 void add_packages_to_pool(utki::span<const unadded_package> packages, const repo_dirs& dirs)
 {
 	// check if any of the package files are already exist in the pool
@@ -254,7 +253,9 @@ void add_packages_to_pool(utki::span<const unadded_package> packages, const repo
 		std::filesystem::copy(p.file_path, filename);
 	}
 }
+} // namespace
 
+namespace {
 class architectures
 {
 	std::map<std::string, std::vector<package>, std::less<>> archs;
@@ -328,7 +329,9 @@ public:
 		}
 	}
 };
+} // namespace
 
+namespace {
 void add_to_architectures(std::vector<unadded_package> packages, const repo_dirs& dirs)
 {
 	architectures archs(dirs.comp);
@@ -339,7 +342,6 @@ void add_to_architectures(std::vector<unadded_package> packages, const repo_dirs
 
 	archs.write_packages();
 }
-
 } // namespace
 
 void aptian::add(
