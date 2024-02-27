@@ -74,6 +74,7 @@ constexpr std::string_view binary_prefix = "binary-"sv;
 constexpr std::string_view control_filename = "control"sv;
 constexpr std::string_view packages_filename = "Packages"sv;
 constexpr std::string_view release_filename = "Release"sv;
+constexpr std::string_view release_gpg_filename = "Release.gpg"sv;
 constexpr std::string_view inrelease_filename = "InRelease"sv;
 } // namespace
 
@@ -489,7 +490,7 @@ std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 } // namespace
 
 namespace {
-void create_release_file(const repo_dirs& dirs, std::string_view dist)
+void create_release_file(const repo_dirs& dirs, std::string_view dist, std::string_view gpg)
 {
 	auto archs = list_archs(dirs);
 	auto comps = list_components(dirs);
@@ -527,10 +528,29 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist)
 		rs << ' ' << f.hashes.sha512 << ' ' << f.size << ' ' << f.path << '\n';
 	}
 
+	auto release_path = utki::cat(dirs.dist, release_filename);
 	{
-		papki::fs_file release_file(utki::cat(dirs.dist, release_filename));
+		papki::fs_file release_file(release_path);
 		papki::file::guard file_guard(release_file, papki::file::mode::create);
 		release_file.write(rs.str());
+	}
+
+	// sign Release file
+	auto release_gpg_path = utki::cat(dirs.dist, release_gpg_filename);
+	std::filesystem::remove(release_gpg_path);
+	if (std::system( //
+			utki::cat(
+				"gpg --armor --detach-sign --sign --no-tty --use-agent --local-user=",
+				gpg,
+				" --output=",
+				release_gpg_path,
+				' ',
+				release_path
+			)
+				.c_str()
+		) != 0)
+	{
+		throw std::runtime_error(utki::cat("could not create gpg signature of ", release_filename, " file"));
 	}
 }
 } // namespace
@@ -572,5 +592,5 @@ void aptian::add(
 
 	add_to_architectures(std::move(unadded_packages), dirs);
 
-	create_release_file(dirs, dist);
+	create_release_file(dirs, dist, config.get_gpg());
 }
