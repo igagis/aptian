@@ -24,6 +24,7 @@ this_name := aptianlib
 this_srcs := $(filter-out src/main.cpp, $(call prorab-src-dir, src))
 
 this_static_lib_only := true
+this_no_install := true
 
 $(eval $(prorab-build-lib))
 

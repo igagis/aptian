@@ -321,8 +321,6 @@ public:
 				packages_file.write(to_string(arch.second));
 			}
 
-			// TODO: archive Packages after all of them are written to preserve old archived ones as a backup copy in
-			// case writing fails gzip Packages file
 			if (std::system(utki::cat("gzip --keep --force ", packages_path).c_str()) != 0) {
 				throw std::runtime_error(utki::cat("could not gzip ", packages_path, " file"));
 			}
