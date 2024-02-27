@@ -467,7 +467,7 @@ std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 				continue;
 			}
 			auto arch_path = utki::cat(comp_path, arch_dir);
-			for (const auto file : papki::fs_file(arch_path).list_dir()) {
+			for (const auto& file : papki::fs_file(arch_path).list_dir()) {
 				if (papki::is_dir(file)) {
 					continue;
 				}

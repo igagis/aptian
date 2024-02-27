@@ -5,9 +5,12 @@ Maintainer: Ivan Gagis <igagis@gmail.com>
 Build-Depends:
 	debhelper (>= 9),
 	dpkg-dev (>=1.17.0),
-	dpkg,                  # for dpkg-deb
-	coreutils,             # for md5sum, sha1sum, sha256sum, sha512sum, date
-	gzip,                  # for gzip
+# for dpkg-deb
+	dpkg,
+# for md5sum, sha1sum, sha256sum, sha512sum, date
+	coreutils,
+# for gzip
+	gzip,
 	prorab,
 	prorab-extra,
 	myci,
