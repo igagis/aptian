@@ -1,0 +1,14 @@
+= aptian
+
+APT repository management tool
+
+== usage
+
+....
+aptain init --dir=/var/www/repo --gpg=mailbox@somemail.com
+aptain add --dir=/var/www/repo --dist=bookworm --comp=main my-package_1.0.0_amd64.deb
+....
+
+== installation
+
+TODO:
