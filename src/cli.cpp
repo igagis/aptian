@@ -32,6 +32,10 @@ using namespace std::string_literals;
 using namespace std::string_view_literals;
 
 namespace {
+constexpr std::string_view program_name = "aptian"sv;
+} // namespace
+
+namespace {
 void handle_init_command(utki::span<const char* const> args)
 {
 	bool help = false;
@@ -73,13 +77,13 @@ void handle_init_command(utki::span<const char* const> args)
 		std::cout << "initialize APT repository" << '\n';
 		std::cout << '\n';
 		std::cout << "Usage:" << '\n';
-		std::cout << "  aptian init --dir=<base-repo-dir> --gpg=<gpg-key>" << '\n';
+		std::cout << "  " << program_name << " init --dir=<base-repo-dir> --gpg=<gpg-key>" << '\n';
 		std::cout << '\n';
 		std::cout << "Options:" << '\n';
 		std::cout << p.description();
 		std::cout << '\n';
 		std::cout << "Example:" << '\n';
-		std::cout << "  aptian init --dir=/var/www/repo/ --gpg=mailbox@somemail.com" << '\n';
+		std::cout << "  " << program_name << " init --dir=/var/www/repo/ --gpg=mailbox@somemail.com" << '\n';
 		std::cout << std::endl;
 		return;
 	}
@@ -146,14 +150,16 @@ void handle_add_command(utki::span<const char* const> args)
 		std::cout << '\n';
 		std::cout << "Usage:" << '\n';
 		std::cout
-			<< "  aptian add --dir=<repo-base-dir> --dist=<distribution> --comp=<component> package1.deb [package2.deb ...]"
+			<< "  " << program_name
+			<< " add --dir=<repo-base-dir> --dist=<distribution> --comp=<component> package1.deb [package2.deb ...]"
 			<< '\n';
 		std::cout << '\n';
 		std::cout << "Options:" << '\n';
 		std::cout << p.description();
 		std::cout << '\n';
 		std::cout << "Example:" << '\n';
-		std::cout << "  aptian add --dir=/var/www/repo/ --dist=bookworm --comp=main my-package_1.0.0_amd64.deb" << '\n';
+		std::cout << "  " << program_name
+				  << " add --dir=/var/www/repo/ --dist=bookworm --comp=main my-package_1.0.0_amd64.deb" << '\n';
 		std::cout << std::endl;
 		return;
 	}
@@ -197,8 +203,6 @@ void handle_command(std::string_view command, utki::span<const char* const> args
 
 namespace {
 
-constexpr std::string_view program_name = "aptian"sv;
-
 void print_commands_list()
 {
 	std::cout << "Commands:" << "\n";
@@ -211,7 +215,7 @@ void print_help(std::string_view args_description)
 	std::cout << program_name << " - Debian APT repository management tool" << "\n";
 	std::cout << "\n";
 	std::cout << "Usage:" << "\n";
-	std::cout << "  " << program_name << " [options] <command> [command arguments]" << "\n";
+	std::cout << "  " << program_name << " [options] <command> [--help] [command arguments]" << "\n";
 	std::cout << "\n";
 	print_commands_list();
 	std::cout << "\n";
