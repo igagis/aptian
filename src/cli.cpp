@@ -52,7 +52,7 @@ void handle_init_command(utki::span<const char* const> args)
 	p.add( //
 		'd',
 		"dir"s,
-		"path to base directory for repository structure, must be empty"s,
+		"path to base directory for creating repository structure, must be empty"s,
 		[&](std::string_view v) {
 			dir = v;
 		}
@@ -117,7 +117,7 @@ void handle_add_command(utki::span<const char* const> args)
 	p.add( //
 		'd',
 		"dir"s,
-		"path to base directory for repository structure. Must be empty."s,
+		"path to base directory of APT repository"s,
 		[&](std::string_view v) {
 			dir = v;
 		}
@@ -142,8 +142,19 @@ void handle_add_command(utki::span<const char* const> args)
 	auto packages = p.parse(args);
 
 	if (help) {
-		// TODO: write help message
-		std::cout << "" << std::endl;
+		std::cout << "add packages to APT repository" << '\n';
+		std::cout << '\n';
+		std::cout << "Usage:" << '\n';
+		std::cout
+			<< "  aptian add --dir=<repo-base-dir> --dist=<distribution> --comp=<component> package1.deb [package2.deb ...]"
+			<< '\n';
+		std::cout << '\n';
+		std::cout << "Options:" << '\n';
+		std::cout << p.description();
+		std::cout << '\n';
+		std::cout << "Example:" << '\n';
+		std::cout << "  aptian add --dir=/var/www/repo/ --dist=bookworm --comp=main my-package_1.0.0_amd64.deb" << '\n';
+		std::cout << std::endl;
 		return;
 	}
 
