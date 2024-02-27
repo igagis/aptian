@@ -74,7 +74,6 @@ constexpr std::string_view lib_prefix = "lib"sv;
 constexpr std::string_view binary_prefix = "binary-"sv;
 constexpr std::string_view control_filename = "control"sv;
 constexpr std::string_view packages_filename = "Packages"sv;
-constexpr std::string_view all_architecture = "all"sv;
 } // namespace
 
 namespace {
@@ -262,8 +261,6 @@ class architectures
 
 	std::string comp_dir;
 
-	bool all_archs_loaded = false;
-
 	auto& load_arch(std::string_view arch)
 	{
 		auto packages_path = utki::cat(this->comp_dir, binary_prefix, arch, '/', packages_filename);
@@ -291,28 +288,6 @@ class architectures
 		return i->second;
 	}
 
-	void load_all_archs()
-	{
-		if (this->all_archs_loaded) {
-			return;
-		}
-
-		papki::fs_file comp_dir_file(this->comp_dir);
-		if (!comp_dir_file.exists()) {
-			return;
-		}
-
-		auto bin_dirs = comp_dir_file.list_dir();
-		for (const auto& d : bin_dirs) {
-			if (!d.starts_with(binary_prefix)) {
-				continue;
-			}
-			auto arch = d.substr(binary_prefix.size());
-			this->get_arch(arch);
-		}
-		this->all_archs_loaded = true;
-	}
-
 public:
 	architectures(std::string comp_dir) :
 		comp_dir(std::move(comp_dir))
@@ -324,15 +299,8 @@ public:
 
 		ASSERT(!arch.empty())
 
-		if (arch == all_architecture) {
-			this->load_all_archs();
-			for (auto& a : this->archs) {
-				a.second.push_back(pkg);
-			}
-		} else {
-			auto& packages = this->get_arch(arch);
-			packages.push_back(std::move(pkg));
-		}
+		auto& packages = this->get_arch(arch);
+		packages.push_back(std::move(pkg));
 	}
 
 	void write_packages()
@@ -352,7 +320,8 @@ public:
 				packages_file.write(to_string(arch.second));
 			}
 
-			// gzip Packages file
+			// TODO: archive Packages after all of them are written to preserve old archived ones as a backup copy in
+			// case writing fails gzip Packages file
 			if (std::system(utki::cat("gzip --keep --force ", packages_path).c_str()) != 0) {
 				throw std::runtime_error(utki::cat("could not gzip ", packages_path, " file"));
 			}
@@ -362,16 +331,6 @@ public:
 
 void add_to_architectures(std::vector<unadded_package> packages, const repo_dirs& dirs)
 {
-	// Sort packages so that 'all' architectures go last.
-	// This is needed to possibly create new architecture Packages files and dirs by
-	// adding packages to non-'all' architectures, so that then those 'all' packages
-	// would be added to those architectures.
-	std::sort(packages.begin(), packages.end(), [](const auto& p1, const auto& p2) {
-		int p1_prio = p1.pkg.fields.architecture == all_architecture ? 0 : 1;
-		int p2_prio = p2.pkg.fields.architecture == all_architecture ? 0 : 1;
-		return p2_prio < p1_prio; // 'all' archs must go last
-	});
-
 	architectures archs(dirs.comp);
 
 	for (auto& p : packages) {
@@ -394,6 +353,8 @@ void aptian::add(
 	ASSERT(!dist.empty())
 	ASSERT(!comp.empty())
 	ASSERT(!package_paths.empty())
+
+	configuration config(dir);
 
 	if (!is_aptian_repo(dir)) {
 		std::stringstream ss;
