@@ -535,7 +535,7 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 		release_file.write(rs.str());
 	}
 
-	// sign Release file
+	// create Release.gpg file
 	auto release_gpg_path = utki::cat(dirs.dist, release_gpg_filename);
 	std::filesystem::remove(release_gpg_path);
 	if (std::system( //
@@ -551,6 +551,24 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 		) != 0)
 	{
 		throw std::runtime_error(utki::cat("could not create gpg signature of ", release_filename, " file"));
+	}
+
+	// Create InRelease file
+	auto inrelease_path = utki::cat(dirs.dist, inrelease_filename);
+	std::filesystem::remove(inrelease_path);
+	if (std::system( //
+			utki::cat(
+				"gpg --clearsign --no-tty --use-agent --local-user=",
+				gpg,
+				" --output=",
+				inrelease_path,
+				' ',
+				release_path
+			)
+				.c_str()
+		) != 0)
+	{
+		throw std::runtime_error(utki::cat("could not create ", inrelease_filename, " file"));
 	}
 }
 } // namespace
