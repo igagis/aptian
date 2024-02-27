@@ -11,6 +11,8 @@ Build-Depends:
 	coreutils,
 # for gzip
 	gzip,
+# for gpg
+	gpg,
 	prorab,
 	prorab-extra,
 	myci,
@@ -29,6 +31,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
 	dpkg,
 	coreutils,
-	gzip
+	gzip,
+	gpg
 Description: APT repository management tool.
  APT repository management tool. Create repository structure, add/remove packages to/from the reporsitory.

@@ -135,8 +135,10 @@ void aptian::init( //
 
 namespace {
 struct repo_dirs {
+	std::string base;
 	std::string dist;
 	std::string comp; // directory under dist_dir
+	std::string pool_relative;
 	std::string pool;
 	std::string tmp;
 };
@@ -238,7 +240,7 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 
 		auto pkg_name = pkg.get_name();
 
-		auto pkg_pool_dir = utki::cat(dirs.pool, apt_pool_prefix(pkg_name), papki::as_dir(pkg_name));
+		auto pkg_pool_dir = utki::cat(dirs.pool_relative, apt_pool_prefix(pkg_name), papki::as_dir(pkg_name));
 
 		auto pkg_pool_path = utki::cat(pkg_pool_dir, filename);
 
@@ -257,22 +259,20 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 namespace {
 void add_packages_to_pool(utki::span<const unadded_package> packages, const repo_dirs& dirs)
 {
-	// check if any of the package files are already exist in the pool
 	for (const auto& p : packages) {
-		if (papki::fs_file(p.pkg.fields.filename).exists()) {
+		const auto& filename = p.pkg.fields.filename;
+		auto path = utki::cat(dirs.base, filename);
+
+		if (papki::fs_file(path).exists()) {
 			std::stringstream ss;
 			ss << "package " << p.pkg.fields.filename << " already exists in the pool";
 			throw std::invalid_argument(ss.str());
 		}
-	}
 
-	// add packages to the pool
-	for (const auto& p : packages) {
-		const auto& filename = p.pkg.fields.filename;
-		std::filesystem::create_directories(papki::dir(filename));
+		std::filesystem::create_directories(papki::dir(path));
 
 		std::cout << "add " << filename << " to the pool" << std::endl;
-		std::filesystem::copy(p.file_path, filename);
+		std::filesystem::copy(p.file_path, path);
 	}
 }
 } // namespace
@@ -585,9 +585,11 @@ void aptian::add(
 	}
 
 	repo_dirs dirs = {
+		.base = std::string(dir),
 		.dist = utki::cat(dir, dists_subdir, papki::as_dir(dist)),
 		.comp = utki::cat(dirs.dist, papki::as_dir(comp)),
-		.pool = utki::cat(dir, pool_subdir, papki::as_dir(dist), papki::as_dir(comp)),
+		.pool_relative = utki::cat(pool_subdir, papki::as_dir(dist), papki::as_dir(comp)),
+		.pool = utki::cat(dir, dirs.pool_relative),
 		.tmp = utki::cat(dir, tmp_subdir)
 	};
 
