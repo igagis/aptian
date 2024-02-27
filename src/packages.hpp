@@ -55,6 +55,8 @@ public:
 	package(package&&) = default;
 	package& operator=(package&&) = default;
 
+	~package() = default;
+
 	std::string to_string() const;
 
 	std::string get_name() const;

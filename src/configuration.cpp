@@ -52,5 +52,5 @@ void configuration::create(std::string_view dir, std::string_view gpg)
 
 std::string_view configuration::get_gpg()
 {
-	return tml::crawler(this->conf).to("gpg").in().get().value.to_string(); // TODO: to_string is bad
+	return tml::crawler(this->conf).to("gpg").in().get().value.string;
 }
