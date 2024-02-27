@@ -73,6 +73,8 @@ constexpr std::string_view lib_prefix = "lib"sv;
 constexpr std::string_view binary_prefix = "binary-"sv;
 constexpr std::string_view control_filename = "control"sv;
 constexpr std::string_view packages_filename = "Packages"sv;
+constexpr std::string_view release_filename = "Release"sv;
+constexpr std::string_view inrelease_filename = "InRelease"sv;
 } // namespace
 
 namespace {
@@ -226,6 +228,7 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 		// calculate hash sums
 		{
 			auto h = get_file_hashes(dirs, pkg_path);
+			// TODO: add package::append(file_hashes) method
 			pkg.append_md5(h.md5);
 			pkg.append_sha1(h.sha1);
 			pkg.append_sha256(h.sha256);
@@ -445,10 +448,7 @@ namespace {
 struct file_hash_info {
 	std::string path; // path within dists/<component>
 	size_t size;
-	std::string md5sum;
-	std::string sha1sum;
-	std::string sha256sum;
-	std::string sha512sum;
+	file_hashes hashes;
 };
 
 std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
@@ -473,11 +473,11 @@ std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 				}
 				auto path = utki::cat(arch_path, file);
 
-				ret.push_back({
-					.path = utki::cat(comp_dir, arch_dir, file),
-					.size = papki::fs_file(path).size()
-					// TODO:
-				});
+				ret.push_back(
+					{.path = utki::cat(comp_dir, arch_dir, file),
+					 .size = papki::fs_file(path).size(),
+					 .hashes = get_file_hashes(dirs, path)}
+				);
 
 				std::cout << "file = " << path << std::endl;
 			}
@@ -509,9 +509,9 @@ void aptian::add(
 	}
 
 	repo_dirs dirs = {
-		.dist = utki::cat(dir, dists_subdir, dist),
-		.comp = utki::cat(dirs.dist, comp),
-		.pool = utki::cat(dir, pool_subdir, dist, comp),
+		.dist = utki::cat(dir, dists_subdir, papki::as_dir(dist)),
+		.comp = utki::cat(dirs.dist, papki::as_dir(comp)),
+		.pool = utki::cat(dir, pool_subdir, papki::as_dir(dist), papki::as_dir(comp)),
 		.tmp = utki::cat(dir, tmp_subdir)
 	};
 
@@ -543,4 +543,10 @@ void aptian::add(
 	auto files_for_signing = list_files_for_release(dirs);
 
 	// TODO:
+
+	{
+		papki::fs_file release_file(utki::cat(dirs.dist, release_filename));
+		papki::file::guard file_guard(release_file, papki::file::mode::create);
+		release_file.write(rs.str());
+	}
 }

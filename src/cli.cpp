@@ -153,8 +153,8 @@ void handle_add_command(utki::span<const char* const> args)
 
 	add( //
 		papki::as_dir(dir),
-		papki::as_dir(dist),
-		papki::as_dir(comp),
+		dist,
+		comp,
 		packages
 	);
 }
