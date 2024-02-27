@@ -140,6 +140,49 @@ struct repo_dirs {
 	std::string tmp;
 };
 
+struct file_hashes {
+	std::string md5;
+	std::string sha1;
+	std::string sha256;
+	std::string sha512;
+};
+
+file_hashes get_file_hashes(const repo_dirs& dirs, std::string_view path)
+{
+	std::filesystem::create_directories(dirs.tmp);
+	auto md5_path = utki::cat(dirs.tmp, "md5");
+	auto sha1_path = utki::cat(dirs.tmp, "sha1");
+	auto sha256_path = utki::cat(dirs.tmp, "sha256");
+	auto sha512_path = utki::cat(dirs.tmp, "sha512");
+	if (std::system(utki::cat("md5sum ", path, " | cut -d\" \" -f1 > ", md5_path).c_str()) != 0) {
+		throw std::runtime_error( //
+			utki::cat("could not calculcate md5 hash sum of ", path)
+		);
+	}
+	if (std::system(utki::cat("sha1sum ", path, " | cut -d\" \" -f1 > ", sha1_path).c_str()) != 0) {
+		throw std::runtime_error( //
+			utki::cat("could not calculcate sha1 hash sum of ", path)
+		);
+	}
+	if (std::system(utki::cat("sha256sum ", path, " | cut -d\" \" -f1 > ", sha256_path).c_str()) != 0) {
+		throw std::runtime_error( //
+			utki::cat("could not calculcate sha256 hash sum of ", path)
+		);
+	}
+	if (std::system(utki::cat("sha512sum ", path, " | cut -d\" \" -f1 > ", sha512_path).c_str()) != 0) {
+		throw std::runtime_error( //
+			utki::cat("could not calculcate sha512 hash sum of  ", path)
+		);
+	}
+
+	return file_hashes{
+		.md5 = std::string(utki::trim(utki::make_string_view(papki::fs_file(md5_path).load()))),
+		.sha1 = std::string(utki::trim(utki::make_string_view(papki::fs_file(sha1_path).load()))),
+		.sha256 = std::string(utki::trim(utki::make_string_view(papki::fs_file(sha256_path).load()))),
+		.sha512 = std::string(utki::trim(utki::make_string_view(papki::fs_file(sha512_path).load())))
+	};
+}
+
 struct unadded_package {
 	std::string file_path;
 	package pkg;
@@ -182,35 +225,11 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 
 		// calculate hash sums
 		{
-			std::filesystem::create_directories(dirs.tmp);
-			auto md5_path = utki::cat(dirs.tmp, "md5");
-			auto sha1_path = utki::cat(dirs.tmp, "sha1");
-			auto sha256_path = utki::cat(dirs.tmp, "sha256");
-			auto sha512_path = utki::cat(dirs.tmp, "sha512");
-			if (std::system(utki::cat("md5sum ", pkg_path, " | cut -d\" \" -f1 > ", md5_path).c_str()) != 0) {
-				throw std::runtime_error( //
-					utki::cat("could not calculcate md5 hash sum of the package ", filename)
-				);
-			}
-			if (std::system(utki::cat("sha1sum ", pkg_path, " | cut -d\" \" -f1 > ", sha1_path).c_str()) != 0) {
-				throw std::runtime_error( //
-					utki::cat("could not calculcate sha1 hash sum of the package ", filename)
-				);
-			}
-			if (std::system(utki::cat("sha256sum ", pkg_path, " | cut -d\" \" -f1 > ", sha256_path).c_str()) != 0) {
-				throw std::runtime_error( //
-					utki::cat("could not calculcate sha256 hash sum of the package ", filename)
-				);
-			}
-			if (std::system(utki::cat("sha512sum ", pkg_path, " | cut -d\" \" -f1 > ", sha512_path).c_str()) != 0) {
-				throw std::runtime_error( //
-					utki::cat("could not calculcate sha512 hash sum of the package ", filename)
-				);
-			}
-			pkg.append_md5(utki::trim(utki::make_string_view(papki::fs_file(md5_path).load())));
-			pkg.append_sha1(utki::trim(utki::make_string_view(papki::fs_file(sha1_path).load())));
-			pkg.append_sha256(utki::trim(utki::make_string_view(papki::fs_file(sha256_path).load())));
-			pkg.append_sha512(utki::trim(utki::make_string_view(papki::fs_file(sha512_path).load())));
+			auto h = get_file_hashes(dirs, pkg_path);
+			pkg.append_md5(h.md5);
+			pkg.append_sha1(h.sha1);
+			pkg.append_sha256(h.sha256);
+			pkg.append_sha512(h.sha512);
 		}
 
 		pkg.append_size(papki::fs_file(pkg_path).size());
@@ -434,6 +453,8 @@ struct file_hash_info {
 
 std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 {
+	std::filesystem::create_directories(dirs.tmp);
+
 	std::vector<file_hash_info> ret;
 
 	for (const auto& comp_dir : papki::fs_file(dirs.dist).list_dir()) {
@@ -453,9 +474,11 @@ std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 				auto path = utki::cat(arch_path, file);
 
 				ret.push_back({
-					.path = utki::cat(comp_dir, arch_dir, file)
+					.path = utki::cat(comp_dir, arch_dir, file),
+					.size = papki::fs_file(path).size()
 					// TODO:
 				});
+
 				std::cout << "file = " << path << std::endl;
 			}
 		}
