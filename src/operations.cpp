@@ -440,7 +440,7 @@ std::string get_cur_date(const repo_dirs& dirs)
 	if (std::system(utki::cat("date --rfc-email --utc > ", cur_date_path).c_str()) != 0) {
 		throw std::runtime_error("failed to invoke 'date'");
 	}
-	return utki::make_string(papki::fs_file(cur_date_path).load());
+	return std::string(utki::trim(utki::make_string_view(papki::fs_file(cur_date_path).load())));
 }
 } // namespace
 
@@ -488,6 +488,53 @@ std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 }
 } // namespace
 
+namespace {
+void create_release_file(const repo_dirs& dirs, std::string_view dist)
+{
+	auto archs = list_archs(dirs);
+	auto comps = list_components(dirs);
+
+	std::stringstream rs;
+	rs << "Origin: aptian" << '\n';
+	rs << "Label: aptian" << '\n';
+	rs << "Suite: " << dist << '\n';
+	rs << "Codename: " << dist << '\n';
+	rs << "NotAutomatic: no" << '\n';
+	rs << "ButAutomaticUpgrades: no" << '\n';
+	rs << "Components: " << combine(comps, ' ') << '\n';
+	rs << "Architectures: " << combine(archs, ' ') << '\n';
+	rs << "Date: " << get_cur_date(dirs) << '\n';
+
+	auto files_for_hashes = list_files_for_release(dirs);
+
+	rs << "MD5Sum:" << '\n';
+	for (const auto& f : files_for_hashes) {
+		rs << ' ' << f.hashes.md5 << ' ' << f.size << ' ' << f.path << '\n';
+	}
+
+	rs << "SHA1:" << '\n';
+	for (const auto& f : files_for_hashes) {
+		rs << ' ' << f.hashes.sha1 << ' ' << f.size << ' ' << f.path << '\n';
+	}
+
+	rs << "SHA256:" << '\n';
+	for (const auto& f : files_for_hashes) {
+		rs << ' ' << f.hashes.sha256 << ' ' << f.size << ' ' << f.path << '\n';
+	}
+
+	rs << "SHA512:" << '\n';
+	for (const auto& f : files_for_hashes) {
+		rs << ' ' << f.hashes.sha512 << ' ' << f.size << ' ' << f.path << '\n';
+	}
+
+	{
+		papki::fs_file release_file(utki::cat(dirs.dist, release_filename));
+		papki::file::guard file_guard(release_file, papki::file::mode::create);
+		release_file.write(rs.str());
+	}
+}
+} // namespace
+
 void aptian::add(
 	std::string_view dir,
 	std::string_view dist,
@@ -525,28 +572,5 @@ void aptian::add(
 
 	add_to_architectures(std::move(unadded_packages), dirs);
 
-	// create Release file
-	auto archs = list_archs(dirs);
-	auto comps = list_components(dirs);
-
-	std::stringstream rs;
-	rs << "Origin: aptian" << '\n';
-	rs << "Label: aptian" << '\n';
-	rs << "Suite: " << dist << '\n';
-	rs << "Codename: " << dist << '\n';
-	rs << "NotAutomatic: no" << '\n';
-	rs << "ButAutomaticUpgrades: no" << '\n';
-	rs << "Components: " << combine(comps, ' ') << '\n';
-	rs << "Architectures: " << combine(archs, ' ') << '\n';
-	rs << "Date: " << get_cur_date(dirs) << '\n';
-
-	auto files_for_signing = list_files_for_release(dirs);
-
-	// TODO:
-
-	{
-		papki::fs_file release_file(utki::cat(dirs.dist, release_filename));
-		papki::file::guard file_guard(release_file, papki::file::mode::create);
-		release_file.write(rs.str());
-	}
+	create_release_file(dirs, dist);
 }
