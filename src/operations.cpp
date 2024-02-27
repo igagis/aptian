@@ -38,6 +38,7 @@ using namespace std::string_view_literals;
 using namespace aptian;
 
 /*
+For APT repository format info refer to: https://wiki.debian.org/DebianRepository/Format
 
 TODO: source repository is not supported at the moment, only binary.
 
