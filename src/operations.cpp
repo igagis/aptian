@@ -423,9 +423,18 @@ std::string get_cur_date(const repo_dirs& dirs)
 } // namespace
 
 namespace {
-std::vector<std::string> list_files_for_signing(const repo_dirs& dirs)
+struct file_hash_info {
+	std::string path; // path within dists/<component>
+	size_t size;
+	std::string md5sum;
+	std::string sha1sum;
+	std::string sha256sum;
+	std::string sha512sum;
+};
+
+std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 {
-	std::vector<std::string> ret;
+	std::vector<file_hash_info> ret;
 
 	for (const auto& comp_dir : papki::fs_file(dirs.dist).list_dir()) {
 		if (!papki::is_dir(comp_dir)) {
@@ -441,8 +450,13 @@ std::vector<std::string> list_files_for_signing(const repo_dirs& dirs)
 				if (papki::is_dir(file)) {
 					continue;
 				}
-				ret.emplace_back(utki::cat(arch_path, file));
-				std::cout << "file = " << ret.back() << std::endl;
+				auto path = utki::cat(arch_path, file);
+
+				ret.push_back({
+					.path = utki::cat(comp_dir, arch_dir, file)
+					// TODO:
+				});
+				std::cout << "file = " << path << std::endl;
 			}
 		}
 	}
@@ -503,7 +517,7 @@ void aptian::add(
 	rs << "Architectures: " << combine(archs, ' ') << '\n';
 	rs << "Date: " << get_cur_date(dirs) << '\n';
 
-	auto files_for_signing = list_files_for_signing(dirs);
+	auto files_for_signing = list_files_for_release(dirs);
 
 	// TODO:
 }
