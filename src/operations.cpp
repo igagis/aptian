@@ -181,6 +181,7 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 
 		// calculate hash sums
 		{
+			std::filesystem::create_directories(dirs.tmp);
 			auto md5_path = utki::cat(dirs.tmp, "md5");
 			auto sha1_path = utki::cat(dirs.tmp, "sha1");
 			auto sha256_path = utki::cat(dirs.tmp, "sha256");
@@ -386,10 +387,11 @@ std::vector<std::string> list_components(const repo_dirs& dirs)
 }
 } // namespace
 
-namespace{
+namespace {
 // TODO: move to utki/string.hpp
-std::string combine(utki::span<const std::string> strings, char delimeter){
-	if(strings.empty()){
+std::string combine(utki::span<const std::string> strings, char delimeter)
+{
+	if (strings.empty()) {
 		return {};
 	}
 
@@ -397,13 +399,56 @@ std::string combine(utki::span<const std::string> strings, char delimeter){
 
 	ss << strings.front();
 
-	for(const auto& s : utki::skip_front<1>(strings)){
+	for (const auto& s : utki::skip_front<1>(strings)) {
 		ss << delimeter << s;
 	}
 
 	return ss.str();
 }
+} // namespace
+
+namespace {
+std::string get_cur_date(const repo_dirs& dirs)
+{
+	constexpr std::string_view cur_date_filename = "cur_date"sv;
+	auto cur_date_path = utki::cat(dirs.tmp, cur_date_filename);
+
+	std::filesystem::create_directories(dirs.tmp);
+	if (std::system(utki::cat("date --rfc-email --utc > ", cur_date_path).c_str()) != 0) {
+		throw std::runtime_error("failed to invoke 'date'");
+	}
+	return utki::make_string(papki::fs_file(cur_date_path).load());
 }
+} // namespace
+
+namespace {
+std::vector<std::string> list_files_for_signing(const repo_dirs& dirs)
+{
+	std::vector<std::string> ret;
+
+	for (const auto& comp_dir : papki::fs_file(dirs.dist).list_dir()) {
+		if (!papki::is_dir(comp_dir)) {
+			continue;
+		}
+		auto comp_path = utki::cat(dirs.dist, comp_dir);
+		for (const auto& arch_dir : papki::fs_file(comp_path).list_dir()) {
+			if (!papki::is_dir(arch_dir)) {
+				continue;
+			}
+			auto arch_path = utki::cat(comp_path, arch_dir);
+			for (const auto file : papki::fs_file(arch_path).list_dir()) {
+				if (papki::is_dir(file)) {
+					continue;
+				}
+				ret.emplace_back(utki::cat(arch_path, file));
+				std::cout << "file = " << ret.back() << std::endl;
+			}
+		}
+	}
+
+	return ret;
+}
+} // namespace
 
 void aptian::add(
 	std::string_view dir,
@@ -455,7 +500,9 @@ void aptian::add(
 	rs << "ButAutomaticUpgrades: no" << '\n';
 	rs << "Components: " << combine(comps, ' ') << '\n';
 	rs << "Architectures: " << combine(archs, ' ') << '\n';
-	rs << "Date: " << '\n'; // TODO:
-	rs << "Valid-Until: " << '\n'; // TODO:
+	rs << "Date: " << get_cur_date(dirs) << '\n';
+
+	auto files_for_signing = list_files_for_signing(dirs);
+
 	// TODO:
 }
