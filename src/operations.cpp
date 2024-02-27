@@ -27,6 +27,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 #include <tml/tree.hpp>
 #include <utki/debug.hpp>
 #include <utki/string.hpp>
+#include <utki/util.hpp>
 
 #include "configuration.hpp"
 #include "packages.hpp"
@@ -342,6 +343,68 @@ void add_to_architectures(std::vector<unadded_package> packages, const repo_dirs
 }
 } // namespace
 
+namespace {
+// TODO: move to papki
+std::string_view as_file(std::string_view path)
+{
+	if (path.empty()) {
+		return path;
+	}
+	if (path.back() == '/') {
+		return path.substr(0, path.size() - 1);
+	}
+	return path;
+}
+} // namespace
+
+namespace {
+std::vector<std::string> list_archs(const repo_dirs& dirs)
+{
+	std::vector<std::string> ret;
+	for (const auto& f : papki::fs_file(dirs.comp).list_dir()) {
+		// std::cout << "dir = " << d << std::endl;
+		if (papki::is_dir(f) && f.starts_with(binary_prefix)) {
+			auto arch = as_file(f).substr(binary_prefix.size());
+			// std::cout << "arch = " << arch << std::endl;
+			ret.emplace_back(arch);
+		}
+	}
+	return ret;
+}
+} // namespace
+
+namespace {
+std::vector<std::string> list_components(const repo_dirs& dirs)
+{
+	std::vector<std::string> ret;
+	for (const auto& f : papki::fs_file(dirs.dist).list_dir()) {
+		if (papki::is_dir(f)) {
+			ret.emplace_back(as_file(f));
+		}
+	}
+	return ret;
+}
+} // namespace
+
+namespace{
+// TODO: move to utki/string.hpp
+std::string combine(utki::span<const std::string> strings, char delimeter){
+	if(strings.empty()){
+		return {};
+	}
+
+	std::stringstream ss;
+
+	ss << strings.front();
+
+	for(const auto& s : utki::skip_front<1>(strings)){
+		ss << delimeter << s;
+	}
+
+	return ss.str();
+}
+}
+
 void aptian::add(
 	std::string_view dir,
 	std::string_view dist,
@@ -379,5 +442,20 @@ void aptian::add(
 
 	add_to_architectures(std::move(unadded_packages), dirs);
 
+	// create Release file
+	auto archs = list_archs(dirs);
+	auto comps = list_components(dirs);
+
+	std::stringstream rs;
+	rs << "Origin: aptian" << '\n';
+	rs << "Label: aptian" << '\n';
+	rs << "Suite: " << dist << '\n';
+	rs << "Codename: " << dist << '\n';
+	rs << "NotAutomatic: no" << '\n';
+	rs << "ButAutomaticUpgrades: no" << '\n';
+	rs << "Components: " << combine(comps, ' ') << '\n';
+	rs << "Architectures: " << combine(archs, ' ') << '\n';
+	rs << "Date: " << '\n'; // TODO:
+	rs << "Valid-Until: " << '\n'; // TODO:
 	// TODO:
 }
