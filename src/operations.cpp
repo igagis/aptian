@@ -237,8 +237,6 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 		}
 
 		pkg.append_size(papki::fs_file(pkg_path).size());
-		// std::cout << "control = " << std::endl;
-		std::cout << pkg.to_string();
 
 		auto pkg_name = pkg.get_name();
 
@@ -387,10 +385,8 @@ std::vector<std::string> list_archs(const repo_dirs& dirs)
 {
 	std::vector<std::string> ret;
 	for (const auto& f : papki::fs_file(dirs.comp).list_dir()) {
-		// std::cout << "dir = " << d << std::endl;
 		if (papki::is_dir(f) && f.starts_with(binary_prefix)) {
 			auto arch = as_file(f).substr(binary_prefix.size());
-			// std::cout << "arch = " << arch << std::endl;
 			ret.emplace_back(arch);
 		}
 	}
@@ -479,8 +475,6 @@ std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 					 .size = papki::fs_file(path).size(),
 					 .hashes = get_file_hashes(dirs, path)}
 				);
-
-				std::cout << "file = " << path << std::endl;
 			}
 		}
 	}
@@ -529,14 +523,15 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 	}
 
 	auto release_path = utki::cat(dirs.dist, release_filename);
+	std::cout << "create " << release_path << std::endl;
 	{
 		papki::fs_file release_file(release_path);
 		papki::file::guard file_guard(release_file, papki::file::mode::create);
 		release_file.write(rs.str());
 	}
 
-	// create Release.gpg file
 	auto release_gpg_path = utki::cat(dirs.dist, release_gpg_filename);
+	std::cout << "create " << release_gpg_path << std::endl;
 	std::filesystem::remove(release_gpg_path);
 	if (std::system( //
 			utki::cat(
@@ -553,8 +548,8 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 		throw std::runtime_error(utki::cat("could not create gpg signature of ", release_filename, " file"));
 	}
 
-	// Create InRelease file
 	auto inrelease_path = utki::cat(dirs.dist, inrelease_filename);
+	std::cout << "create " << inrelease_path << std::endl;
 	std::filesystem::remove(inrelease_path);
 	if (std::system( //
 			utki::cat(
@@ -588,9 +583,7 @@ void aptian::add(
 	configuration config(dir);
 
 	if (!is_aptian_repo(dir)) {
-		std::stringstream ss;
-		ss << "given --dir argument is not an aptian repository";
-		throw std::invalid_argument(ss.str());
+		throw std::invalid_argument("given --dir argument is not an aptian repository");
 	}
 
 	repo_dirs dirs = {
@@ -600,10 +593,6 @@ void aptian::add(
 		.tmp = utki::cat(dir, tmp_subdir)
 	};
 
-	// std::cout << "dirs.dist = " << dirs.dist << std::endl;
-	// std::cout << "dirs.comp = " << dirs.comp << std::endl;
-	// std::cout << "dirs.pool = " << dirs.pool << std::endl;
-
 	auto unadded_packages = prepare_control_info(package_paths, dirs);
 
 	add_packages_to_pool(unadded_packages, dirs);
@@ -611,4 +600,6 @@ void aptian::add(
 	add_to_architectures(std::move(unadded_packages), dirs);
 
 	create_release_file(dirs, dist, config.get_gpg());
+
+	std::cout << "done" << std::endl;
 }
