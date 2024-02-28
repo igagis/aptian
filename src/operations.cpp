@@ -254,6 +254,7 @@ void add_packages_to_pool(utki::span<const unadded_package> packages, const repo
 		if (papki::fs_file(path).exists()) {
 			auto hashes = get_file_hashes(dirs, path);
 
+			// TODO: compare files byte by byte instead of comparing hashes
 			if (hashes == p.hashes) {
 				std::cout << "package " << p.pkg.fields.filename
 						  << " already exists in the pool and has same hash sums, skip adding to the pool" << std::endl;
@@ -423,26 +424,6 @@ std::vector<std::string> list_components(const repo_dirs& dirs)
 } // namespace
 
 namespace {
-// TODO: move to utki/string.hpp
-std::string combine(utki::span<const std::string> strings, char delimeter)
-{
-	if (strings.empty()) {
-		return {};
-	}
-
-	std::stringstream ss;
-
-	ss << strings.front();
-
-	for (const auto& s : utki::skip_front<1>(strings)) {
-		ss << delimeter << s;
-	}
-
-	return ss.str();
-}
-} // namespace
-
-namespace {
 std::string get_cur_date(const repo_dirs& dirs)
 {
 	constexpr std::string_view cur_date_filename = "cur_date"sv;
@@ -511,8 +492,8 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 	rs << "Codename: " << dist << '\n';
 	rs << "NotAutomatic: no" << '\n';
 	rs << "ButAutomaticUpgrades: no" << '\n';
-	rs << "Components: " << combine(comps, ' ') << '\n';
-	rs << "Architectures: " << combine(archs, ' ') << '\n';
+	rs << "Components: " << utki::join(comps, ' ') << '\n';
+	rs << "Architectures: " << utki::join(archs, ' ') << '\n';
 	rs << "Date: " << get_cur_date(dirs) << '\n';
 
 	auto files_for_hashes = list_files_for_release(dirs);
