@@ -164,6 +164,8 @@ class parser
 				if (this->line_start) {
 					// package parsed
 					if (!this->buf.empty()) {
+						ASSERT(this->buf.back() == '\n')
+						this->buf.pop_back();
 						this->packages.emplace_back(utki::make_string_view(this->buf));
 						this->buf.clear();
 						// std::cout << "package read:" << '\n';
@@ -171,11 +173,10 @@ class parser
 					}
 					ASSERT(this->buf.empty())
 				} else {
-					if (!this->buf.empty()) {
-						this->buf.push_back(c);
-					}
+					ASSERT(!this->buf.empty())
+					this->buf.push_back(c);
 				}
-				this->line_start = !this->line_start;
+				this->line_start = true;
 			} else {
 				this->line_start = false;
 				this->buf.push_back(c);
