@@ -322,9 +322,15 @@ public:
 
 		auto& packages = this->get_arch(arch);
 
-		auto i = std::find_if(packages.begin(), packages.end(), [&](const auto& p) {
-			return p.fields.package == pkg.fields.package && p.fields.version == pkg.fields.version;
-		});
+		auto i = std::find_if( //
+			packages.begin(),
+			packages.end(),
+			[&](const auto& p) {
+				return //
+					p.fields.package == pkg.fields.package && //
+					p.fields.version == pkg.fields.version;
+			}
+		);
 		if (i != packages.end()) {
 			std::cout << utki::cat(
 							 "package ",
