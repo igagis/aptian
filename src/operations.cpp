@@ -332,19 +332,13 @@ public:
 			}
 		);
 		if (i != packages.end()) {
-			std::cout << utki::cat(
-							 "package ",
-							 pkg.fields.package,
-							 "(version: ",
-							 pkg.fields.version,
-							 ", arch: ",
-							 pkg.fields.architecture,
-							 ") already exists, skip adding"
-						 )
-					  << std::endl;
-			;
+			std::cout << "package " << pkg.fields.package << "(version: " << pkg.fields.version
+					  << ", arch: " << pkg.fields.architecture << ") already exists, skip adding" << std::endl;
 			return;
 		}
+
+		std::cout << "add " << pkg.fields.package << "(version: " << pkg.fields.version
+				  << ", arch: " << pkg.fields.architecture << ")" << std::endl;
 
 		packages.push_back(std::move(pkg));
 	}
