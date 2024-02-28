@@ -40,11 +40,6 @@ jobs:
         run: myci-deb-prepare.sh
       - name: install deps
         run: myci-deb-install-build-deps.sh
-      - name: add DE locale
-        # needed for testing that locale with "," as decimal delimiter does not break the parsing with string_parser
-        run: |
-          echo "de_DE.UTF-8 UTF-8" >> /etc/locale.gen
-          locale-gen
       - name: build
         run: make config=gcov
       - name: test
@@ -100,11 +95,6 @@ jobs:
         run: myci-deb-prepare.sh
       - name: install deps
         run: myci-deb-install-build-deps.sh
-      - name: add DE locale
-        # needed for testing that locale with "," as decimal delimiter does not break the parsing with string_parser
-        run: |
-          echo "de_DE.UTF-8 UTF-8" >> /etc/locale.gen
-          locale-gen
       - name: build
         run: make config=asan
       - name: test
@@ -163,11 +153,6 @@ jobs:
         run: myci-deb-prepare.sh
       - name: install deps
         run: myci-deb-install-build-deps.sh
-      - name: add DE locale
-        # needed for testing that locale with "," as decimal delimiter does not break the parsing with string_parser
-        run: |
-          echo "de_DE.UTF-8 UTF-8" >> /etc/locale.gen
-          locale-gen
       - name: build
         run: dpkg-buildpackage --unsigned-source --unsigned-changes
       # - name: upload binaries to artifacts
