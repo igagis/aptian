@@ -27,5 +27,6 @@ int main(int argc, const char** argv)
 	} catch (std::exception& e) {
 		std::cout << "ERROR: uncaught exception" << '\n';
 		std::cout << "  " << e.what() << std::endl;
+		return 1;
 	}
 }
