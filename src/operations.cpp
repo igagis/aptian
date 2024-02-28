@@ -128,6 +128,15 @@ struct file_hashes {
 	std::string sha1;
 	std::string sha256;
 	std::string sha512;
+
+	bool operator==(const file_hashes& h) const
+	{
+		return //
+			this->md5 == h.md5 && //
+			this->sha1 == h.sha1 && //
+			this->sha256 == h.sha256 && //
+			this->sha512 == h.sha512;
+	}
 };
 
 file_hashes get_file_hashes(const repo_dirs& dirs, std::string_view path)
@@ -169,6 +178,7 @@ file_hashes get_file_hashes(const repo_dirs& dirs, std::string_view path)
 struct unadded_package {
 	std::string file_path;
 	package pkg;
+	file_hashes hashes;
 };
 
 std::vector<unadded_package> prepare_control_info(utki::span<const std::string> package_paths, const repo_dirs& dirs)
@@ -206,15 +216,12 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 			)
 		);
 
-		// calculate hash sums
-		{
-			auto h = get_file_hashes(dirs, pkg_path);
-			// TODO: add package::append(file_hashes) method
-			pkg.append_md5(h.md5);
-			pkg.append_sha1(h.sha1);
-			pkg.append_sha256(h.sha256);
-			pkg.append_sha512(h.sha512);
-		}
+		auto hashes = get_file_hashes(dirs, pkg_path);
+		// TODO: add package::append(file_hashes) method
+		pkg.append_md5(hashes.md5);
+		pkg.append_sha1(hashes.sha1);
+		pkg.append_sha256(hashes.sha256);
+		pkg.append_sha512(hashes.sha512);
 
 		pkg.append_size(papki::fs_file(pkg_path).size());
 
@@ -228,7 +235,8 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 
 		unadded_packages.push_back({//
 									.file_path = pkg_path,
-									.pkg = std::move(pkg)
+									.pkg = std::move(pkg),
+									.hashes = std::move(hashes)
 		});
 	}
 
@@ -244,9 +252,19 @@ void add_packages_to_pool(utki::span<const unadded_package> packages, const repo
 		auto path = utki::cat(dirs.base, filename);
 
 		if (papki::fs_file(path).exists()) {
-			std::stringstream ss;
-			ss << "package " << p.pkg.fields.filename << " already exists in the pool";
-			throw std::invalid_argument(ss.str());
+			auto hashes = get_file_hashes(dirs, path);
+
+			if (hashes == p.hashes) {
+				std::cout << "package " << p.pkg.fields.filename
+						  << " already exists in the pool and has same hash sums, skip adding to the pool" << std::endl;
+				continue;
+			}
+
+			throw std::invalid_argument(utki::cat(
+				"package ",
+				p.pkg.fields.filename,
+				" already exists in the pool and is different. Remove the existing package first before adding another one."
+			));
 		}
 
 		std::filesystem::create_directories(papki::dir(path));
