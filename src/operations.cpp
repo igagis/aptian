@@ -601,5 +601,7 @@ void aptian::add(
 
 	create_release_file(dirs, dist, config.get_gpg());
 
+	std::filesystem::remove_all(dirs.tmp);
+
 	std::cout << "done" << std::endl;
 }
