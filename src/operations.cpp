@@ -383,26 +383,12 @@ void add_to_architectures(std::vector<unadded_package> packages, const repo_dirs
 } // namespace
 
 namespace {
-// TODO: move to papki
-std::string_view as_file(std::string_view path)
-{
-	if (path.empty()) {
-		return path;
-	}
-	if (path.back() == '/') {
-		return path.substr(0, path.size() - 1);
-	}
-	return path;
-}
-} // namespace
-
-namespace {
 std::vector<std::string> list_archs(const repo_dirs& dirs)
 {
 	std::vector<std::string> ret;
 	for (const auto& f : papki::fs_file(dirs.comp).list_dir()) {
 		if (papki::is_dir(f) && f.starts_with(binary_prefix)) {
-			auto arch = as_file(f).substr(binary_prefix.size());
+			auto arch = papki::as_file(f).substr(binary_prefix.size());
 			ret.emplace_back(arch);
 		}
 	}
@@ -416,7 +402,7 @@ std::vector<std::string> list_components(const repo_dirs& dirs)
 	std::vector<std::string> ret;
 	for (const auto& f : papki::fs_file(dirs.dist).list_dir()) {
 		if (papki::is_dir(f)) {
-			ret.emplace_back(as_file(f));
+			ret.emplace_back(papki::as_file(f));
 		}
 	}
 	return ret;
