@@ -139,6 +139,7 @@ const tst::set set("packages", [](tst::suite& suite){ // NOLINT
 
         aptian::package p2(std::move(p1));
 
+        // NOLINTNEXTLINE(bugprone-use-after-move)
         p1.fields.filename = ""sv;
 
         tst::check_eq(p2.fields.package, "libantigrain0-dbg"sv);
