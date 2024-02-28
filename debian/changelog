@@ -1,3 +1,9 @@
+aptian (0.0.3) unstable; urgency=medium
+
+  * fix deployment
+
+ -- Ivan Gagis <igagis@gmail.com>  Wed, 28 Feb 2024 23:48:22 +0200
+
 aptian (0.0.2) unstable; urgency=medium
 
   * initial release
