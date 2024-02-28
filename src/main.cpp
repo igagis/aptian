@@ -22,5 +22,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 int main(int argc, const char** argv)
 {
-	return aptian::handle_cli(argc, argv);
+	try {
+		return aptian::handle_cli(argc, argv);
+	} catch (std::exception& e) {
+		std::cout << "ERROR: uncaught exception" << '\n';
+		std::cout << "  " << e.what() << std::endl;
+	}
 }

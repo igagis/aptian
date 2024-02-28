@@ -77,14 +77,6 @@ constexpr std::string_view inrelease_filename = "InRelease"sv;
 } // namespace
 
 namespace {
-bool is_aptian_repo(std::string_view dir)
-{
-	return papki::fs_file(utki::cat(dir, dists_subdir)).exists() &&
-		papki::fs_file(utki::cat(dir, pool_subdir)).exists();
-}
-} // namespace
-
-namespace {
 std::string apt_pool_prefix(std::string_view package_name)
 {
 	ASSERT(!package_name.empty())
@@ -567,10 +559,6 @@ void aptian::add(
 	ASSERT(!package_paths.empty())
 
 	configuration config(dir);
-
-	if (!is_aptian_repo(dir)) {
-		throw std::invalid_argument("given --dir argument is not an aptian repository");
-	}
 
 	repo_dirs dirs = {
 		.base = std::string(dir),
