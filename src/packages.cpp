@@ -111,40 +111,16 @@ std::string package::get_name() const
 	return std::string(this->fields.package);
 }
 
-void package::append_filename(std::string_view pool_path)
+void package::append(std::string_view pool_path, size_t size, const file_hashes& hashes)
 {
-	ASSERT(!pool_path.empty())
-	if (!this->fields.filename.empty()) {
-		throw std::logic_error("could not append filename, the package control already has Filename field");
-	}
-
 	this->control.push_back(utki::cat(filename_entry, pool_path));
-	this->fields.filename = std::string_view(this->control.back()).substr(filename_entry.size());
-}
-
-void package::append_md5(std::string_view md5)
-{
-	this->control.push_back(utki::cat(md5sum_entry, md5));
-}
-
-void package::append_sha1(std::string_view sha1)
-{
-	this->control.push_back(utki::cat(sha1_entry, sha1));
-}
-
-void package::append_sha256(std::string_view sha256)
-{
-	this->control.push_back(utki::cat(sha256_entry, sha256));
-}
-
-void package::append_sha512(std::string_view sha512)
-{
-	this->control.push_back(utki::cat(sha512_entry, sha512));
-}
-
-void package::append_size(size_t size)
-{
 	this->control.push_back(utki::cat(size_entry, size));
+	this->control.push_back(utki::cat(md5sum_entry, hashes.md5));
+	this->control.push_back(utki::cat(sha1_entry, hashes.sha1));
+	this->control.push_back(utki::cat(sha256_entry, hashes.sha256));
+	this->control.push_back(utki::cat(sha512_entry, hashes.sha512));
+
+	this->fields = parse(this->control);
 }
 
 namespace {

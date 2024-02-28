@@ -123,22 +123,6 @@ struct repo_dirs {
 	std::string tmp;
 };
 
-struct file_hashes {
-	std::string md5;
-	std::string sha1;
-	std::string sha256;
-	std::string sha512;
-
-	bool operator==(const file_hashes& h) const
-	{
-		return //
-			this->md5 == h.md5 && //
-			this->sha1 == h.sha1 && //
-			this->sha256 == h.sha256 && //
-			this->sha512 == h.sha512;
-	}
-};
-
 file_hashes get_file_hashes(const repo_dirs& dirs, std::string_view path)
 {
 	std::filesystem::create_directories(dirs.tmp);
@@ -216,22 +200,15 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 			)
 		);
 
-		auto hashes = get_file_hashes(dirs, pkg_path);
-		// TODO: add package::append(file_hashes) method
-		pkg.append_md5(hashes.md5);
-		pkg.append_sha1(hashes.sha1);
-		pkg.append_sha256(hashes.sha256);
-		pkg.append_sha512(hashes.sha512);
-
-		pkg.append_size(papki::fs_file(pkg_path).size());
-
 		auto pkg_name = pkg.get_name();
 
 		auto pkg_pool_dir = utki::cat(dirs.pool_relative, apt_pool_prefix(pkg_name), papki::as_dir(pkg_name));
 
 		auto pkg_pool_path = utki::cat(pkg_pool_dir, filename);
 
-		pkg.append_filename(pkg_pool_path);
+		auto hashes = get_file_hashes(dirs, pkg_path);
+
+		pkg.append(pkg_pool_path, papki::fs_file(pkg_path).size(), hashes);
 
 		unadded_packages.push_back({//
 									.file_path = pkg_path,

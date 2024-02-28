@@ -25,6 +25,22 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 namespace aptian {
 
+struct file_hashes {
+	std::string md5;
+	std::string sha1;
+	std::string sha256;
+	std::string sha512;
+
+	bool operator==(const file_hashes& h) const
+	{
+		return //
+			this->md5 == h.md5 && //
+			this->sha1 == h.sha1 && //
+			this->sha256 == h.sha256 && //
+			this->sha512 == h.sha512;
+	}
+};
+
 class package
 {
 	std::vector<std::string> control;
@@ -61,12 +77,7 @@ public:
 
 	std::string get_name() const;
 
-	void append_filename(std::string_view pool_path);
-	void append_md5(std::string_view md5);
-	void append_sha1(std::string_view sha1);
-	void append_sha256(std::string_view sha256);
-	void append_sha512(std::string_view sha512);
-	void append_size(size_t size);
+	void append(std::string_view pool_path, size_t size, const file_hashes& hashes);
 
 	bool operator==(const package& p) const
 	{
