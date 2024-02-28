@@ -47,10 +47,9 @@ package::package(std::string_view control) :
 {}
 
 package::package(const package& p) :
-	control(p.control)
-{
-	this->fields = parse(this->control);
-}
+	control(p.control),
+	fields(parse(this->control))
+{}
 
 package::control_fields package::parse(utki::span<const std::string> control)
 {
