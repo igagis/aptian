@@ -9,7 +9,8 @@ this__aptainlib := out/$(c)/libaptianlib.a
 
 this_srcs := src/main.cpp
 
-this_ldlibs += $(this__aptainlib) -lpapki -lutki -lclargs -ltml
+this_ldlibs += $(this__aptainlib)
+this_ldlibs += -Wl,-Bstatic -ltml -lpapki -lclargs -lutki -Wl,-Bdynamic
 
 $(eval $(prorab-build-app))
 $(eval $(call prorab-depend, $(prorab_this_name), $(this__aptainlib)))
