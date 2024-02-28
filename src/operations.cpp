@@ -321,6 +321,22 @@ public:
 		ASSERT(!arch.empty())
 
 		auto& packages = this->get_arch(arch);
+
+		auto i = std::find_if(packages.begin(), packages.end(), [&](const auto& p) {
+			return p.fields.package == pkg.fields.package && p.fields.version == pkg.fields.version;
+		});
+		if (i != packages.end()) {
+			throw std::invalid_argument(utki::cat(
+				"package ",
+				pkg.fields.package,
+				"(version: ",
+				pkg.fields.version,
+				", arch: ",
+				pkg.fields.architecture,
+				") already exists. Remove the package before adding another one."
+			));
+		}
+
 		packages.push_back(std::move(pkg));
 	}
 
