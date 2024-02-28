@@ -47,6 +47,9 @@ void configuration::create(std::string_view dir, std::string_view gpg)
 	tml::forest cfg = {tml::tree("gpg"s, {tml::tree(gpg)})};
 
 	papki::fs_file cfg_file(utki::cat(dir, config_filename));
+
+	// TODO: check if file exists and only overwrite if --force
+
 	tml::write(cfg, cfg_file);
 }
 

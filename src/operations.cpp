@@ -105,7 +105,7 @@ void aptian::init( //
 	ASSERT(!dir.empty())
 	ASSERT(!gpg.empty())
 
-	papki::fs_file dir_file(papki::as_dir(dir));
+	papki::fs_file dir_file(dir);
 
 	if (!dir_file.exists()) {
 		std::stringstream ss;
@@ -113,19 +113,7 @@ void aptian::init( //
 		throw std::invalid_argument(ss.str());
 	}
 
-	if (!dir_file.list_dir().empty()) {
-		std::stringstream ss;
-		ss << "directory '" << dir << "' is not empty";
-		throw std::invalid_argument(ss.str());
-	}
-
 	std::cout << "initialize APT repository" << std::endl;
-
-	std::cout << "create '" << dists_subdir << "'" << std::endl;
-	papki::fs_file(utki::cat(dir_file.path(), dists_subdir)).make_dir();
-
-	std::cout << "create '" << pool_subdir << "'" << std::endl;
-	papki::fs_file(utki::cat(dir_file.path(), pool_subdir)).make_dir();
 
 	std::cout << "create configuration file" << std::endl;
 	configuration::create(dir, gpg);
