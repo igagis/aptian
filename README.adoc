@@ -1,17 +1,24 @@
-= aptian
+:name: aptian
+
+= {name}
+
+|====
+| link:https://github.com/cppfw/{name}/releases[image:https://img.shields.io/github/tag/cppfw/{name}.svg[releases]] | link:https://github.com/cppfw/{name}/actions[image:https://github.com/cppfw/{name}/workflows/ci/badge.svg[ci status]] | link:https://codecov.io/gh/cppfw/{name}[image:https://codecov.io/gh/cppfw/{name}/branch/master/graph/badge.svg?token=LKA3SRSkc3[codecov.io]]
+|====
 
 APT repository management tool
 
 == usage
 
 ....
+aptian --help
 aptain init --dir=/var/www/repo --gpg=mailbox@somemail.com
 aptain add --dir=/var/www/repo --dist=bookworm --comp=main my-package_1.0.0_amd64.deb
 ....
 
 == installation
 
-=== via debian repository
+=== debian repository
 
 Currently supported:
 
@@ -31,7 +38,7 @@ Add apt repo to your `sources` list, replace `<distro>` and `<release>` accordin
 echo "deb https://gagis.hopto.org/repo/igagis/<distro> <release> main" | sudo tee /etc/apt/sources.list.d/igagis.list
 ....
 
-Install `aptian`:
+Install `{name}`:
 ....
 sudo apt update
 sudo apt install aptian
