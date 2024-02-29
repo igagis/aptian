@@ -11,4 +11,28 @@ aptain add --dir=/var/www/repo --dist=bookworm --comp=main my-package_1.0.0_amd6
 
 == installation
 
-TODO:
+=== via debian repository
+
+Currently supported:
+
+- `<distro> = debian, <release> = bullseye`
+- `<distro> = debian, <release> = bookworm`
+- `<distro> = ubuntu, <release> = focal`
+- `<distro> = ubuntu, <release> = jammy`
+
+Download APT key:
+....
+sudo apt install curl
+curl --silent --show-error https://gagis.hopto.org/repo/igagis/pubkey.gpg | sudo tee /etc/apt/trusted.gpg.d/igagis.asc
+....
+
+Add apt repo to your `sources` list, replace `<distro>` and `<release>` accordingly:
+....
+echo "deb https://gagis.hopto.org/repo/igagis/<distro> <release> main" | sudo tee /etc/apt/sources.list.d/igagis.list
+....
+
+Install `aptian`:
+....
+sudo apt update
+sudo apt install aptian
+....

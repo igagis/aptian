@@ -41,6 +41,7 @@ struct file_hashes {
 	}
 };
 
+// TODO: refactor, avoid keeping string_views, use strings
 class package
 {
 	std::vector<std::string> control;
