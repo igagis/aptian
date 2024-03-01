@@ -401,7 +401,7 @@ std::string get_cur_date(const repo_dirs& dirs)
 
 namespace {
 struct file_hash_info {
-	std::string path; // path within dists/<component>
+	std::string path; // path within dists/<dist>
 	size_t size;
 	file_hashes hashes;
 };
