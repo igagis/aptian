@@ -117,9 +117,8 @@ namespace {
 struct repo_dirs {
 	std::string base;
 	std::string dist;
-	std::string comp; // directory under dist_dir
-	std::string pool_relative;
-	std::string pool;
+	std::string comp; // directory under dist dir
+	std::string pool; // relative to base dir
 	std::string tmp;
 };
 
@@ -202,7 +201,7 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 
 		auto pkg_name = pkg.get_name();
 
-		auto pkg_pool_dir = utki::cat(dirs.pool_relative, apt_pool_prefix(pkg_name), papki::as_dir(pkg_name));
+		auto pkg_pool_dir = utki::cat(dirs.pool, apt_pool_prefix(pkg_name), papki::as_dir(pkg_name));
 
 		auto pkg_pool_path = utki::cat(pkg_pool_dir, filename);
 
@@ -545,8 +544,7 @@ void aptian::add(
 		.base = std::string(dir),
 		.dist = utki::cat(dir, dists_subdir, papki::as_dir(dist)),
 		.comp = utki::cat(dirs.dist, papki::as_dir(comp)),
-		.pool_relative = utki::cat(pool_subdir, papki::as_dir(dist), papki::as_dir(comp)),
-		.pool = utki::cat(dir, dirs.pool_relative),
+		.pool = utki::cat(pool_subdir, papki::as_dir(dist), papki::as_dir(comp)),
 		.tmp = utki::cat(dir, tmp_subdir)
 	};
 
