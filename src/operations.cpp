@@ -458,25 +458,25 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 	rs << "Architectures: " << utki::join(archs, ' ') << '\n';
 	rs << "Date: " << get_cur_date(dirs) << '\n';
 
-	auto files_for_hashes = list_files_for_release(dirs);
+	auto files_for_release = list_files_for_release(dirs);
 
 	rs << "MD5Sum:" << '\n';
-	for (const auto& f : files_for_hashes) {
+	for (const auto& f : files_for_release) {
 		rs << ' ' << f.hashes.md5 << ' ' << f.size << ' ' << f.path << '\n';
 	}
 
 	rs << "SHA1:" << '\n';
-	for (const auto& f : files_for_hashes) {
+	for (const auto& f : files_for_release) {
 		rs << ' ' << f.hashes.sha1 << ' ' << f.size << ' ' << f.path << '\n';
 	}
 
 	rs << "SHA256:" << '\n';
-	for (const auto& f : files_for_hashes) {
+	for (const auto& f : files_for_release) {
 		rs << ' ' << f.hashes.sha256 << ' ' << f.size << ' ' << f.path << '\n';
 	}
 
 	rs << "SHA512:" << '\n';
-	for (const auto& f : files_for_hashes) {
+	for (const auto& f : files_for_release) {
 		rs << ' ' << f.hashes.sha512 << ' ' << f.size << ' ' << f.path << '\n';
 	}
 
