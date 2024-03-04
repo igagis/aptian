@@ -1,3 +1,9 @@
+aptian (0.0.4) unstable; urgency=medium
+
+  * create pubkey.gpg on init
+
+ -- Ivan Gagis <igagis@gmail.com>  Tue, 05 Mar 2024 00:07:59 +0200
+
 aptian (0.0.3) unstable; urgency=medium
 
   * fix deployment
