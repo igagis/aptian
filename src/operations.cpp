@@ -74,6 +74,7 @@ constexpr std::string_view packages_filename = "Packages"sv;
 constexpr std::string_view release_filename = "Release"sv;
 constexpr std::string_view release_gpg_filename = "Release.gpg"sv;
 constexpr std::string_view inrelease_filename = "InRelease"sv;
+constexpr std::string_view pubkey_gpg_filename = "pubkey.gpg"sv;
 } // namespace
 
 namespace {
@@ -109,6 +110,16 @@ void aptian::init( //
 
 	std::cout << "create configuration file" << std::endl;
 	configuration::create(dir, gpg);
+
+	auto pubkey_gpg_path = utki::cat(dir, pubkey_gpg_filename);
+	std::cout << "create " << pubkey_gpg_path << std::endl;
+	std::filesystem::remove(pubkey_gpg_path);
+	if (std::system( //
+			utki::cat("gpg --armor --export --output=", pubkey_gpg_path, ' ', gpg).c_str()
+		) != 0)
+	{
+		throw std::runtime_error(utki::cat("could not create gpg ", pubkey_gpg_filename, " file"));
+	}
 
 	std::cout << "done" << std::endl;
 }
