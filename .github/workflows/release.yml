@@ -2,9 +2,6 @@ name: make release
 on:
   workflow_dispatch:
     inputs:
-      message:
-        description: 'Release message, will be added to debian/changelog'
-        required: true
       type:
         description: 'Release type'
         required: true
@@ -12,12 +9,19 @@ on:
         type: choice
         options:
         - patch
-        - minor
-        - major
+        - release
+      message:
+        description: 'Release message for patch, will be added to debian/changelog'
+        required: false
+        type: string
+env:
+  MYCI_GIT_PASSWORD: ${{ secrets.MYCI_GIT_PASSWORD }}
+  DEBEMAIL: ${{ vars.DEBEMAIL }}
+  DEBFULLNAME: ${{ vars.DEBFULLNAME }}
 jobs:
   release:
     runs-on: ubuntu-latest
-    name: release - ${{ inputs.type }}
+    name: make ${{ inputs.type }}
     strategy:
       fail-fast: true
       matrix:
@@ -25,6 +29,16 @@ jobs:
           - {os: debian, codename: bookworm, image_owner: }
     container: ${{ matrix.image_owner }}${{ matrix.os }}:${{ matrix.codename }}
     steps:
+      - name: error if not main branch
+        if: github.ref != 'refs/heads/main'
+        run: exit 1
+      - name: check patch inputs
+        if: ${{ inputs.type == 'patch' }}
+        run: |
+          if [ -z "${{ inputs.message }}" ]; then
+            echo "ERROR: message is empty! For releasing a patch a message is required"
+            exit 1
+          fi
       - name: add cppfw deb repo
         uses: myci-actions/add-deb-repo@master
         with:
@@ -34,4 +48,19 @@ jobs:
           install: myci git
       - name: git clone
         uses: myci-actions/checkout@master
-      # TODO:
+        with:
+          submodules: false
+      - name: set git identity
+        run: |
+          git config user.email $DEBEMAIL
+          git config user.name "$DEBFULLNAME"
+      - name: checkout main branch
+        run: git checkout main
+      - name: patch
+        if: ${{ inputs.type == 'patch' }}
+        run: |
+          myci-release-patch.sh "${{ inputs.message }}"
+      - name: release
+        if: ${{ inputs.type == 'release' }}
+        run: |
+          myci-release.sh
