@@ -1,0 +1,36 @@
+name: make release
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Release message, will be added to debian/changelog'
+        required: true
+      type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+env:
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: coverage - measure
+    env:
+      linux_distro: debian
+      linux_release: bullseye
+    container: ${{ env.linux_distro }}:${{ env.linux_release }}
+    steps:
+      - name: add cppfw deb repo
+        uses: myci-actions/add-deb-repo@master
+        with:
+          repo: deb https://gagis.hopto.org/repo/cppfw/${{ env.linux_distro }} ${{ env.linux_release }} main
+          repo-name: cppfw
+          keys-asc: https://gagis.hopto.org/repo/cppfw/pubkey.gpg
+          install: myci git
+      - name: git clone
+        uses: myci-actions/checkout@master
+      # TODO:
