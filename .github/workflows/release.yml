@@ -14,20 +14,21 @@ on:
         - patch
         - minor
         - major
-env:
 jobs:
   release:
     runs-on: ubuntu-latest
-    name: coverage - measure
-    env:
-      linux_distro: debian
-      linux_release: bullseye
-    container: ${{ env.linux_distro }}:${{ env.linux_release }}
+    name: release - ${{ inputs.type }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - {os: debian, codename: bookworm, image_owner: }
+    container: ${{ matrix.image_owner }}${{ matrix.os }}:${{ matrix.codename }}
     steps:
       - name: add cppfw deb repo
         uses: myci-actions/add-deb-repo@master
         with:
-          repo: deb https://gagis.hopto.org/repo/cppfw/${{ env.linux_distro }} ${{ env.linux_release }} main
+          repo: deb https://gagis.hopto.org/repo/cppfw/${{ matrix.os }} ${{ matrix.codename }} main
           repo-name: cppfw
           keys-asc: https://gagis.hopto.org/repo/cppfw/pubkey.gpg
           install: myci git
