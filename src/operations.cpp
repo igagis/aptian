@@ -127,6 +127,7 @@ void aptian::init( //
 namespace {
 struct repo_dirs {
 	std::string base;
+	std::string dist_rel; // relative to base dir
 	std::string dist;
 	std::string comp; // directory under dist dir
 	std::string pool; // relative to base dir
@@ -492,7 +493,7 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 	}
 
 	auto release_path = utki::cat(dirs.dist, release_filename);
-	std::cout << "create " << release_path << std::endl;
+	std::cout << "create " << utki::cat(dirs.dist_rel, release_filename) << std::endl;
 	{
 		papki::fs_file release_file(release_path);
 		papki::file::guard file_guard(release_file, papki::file::mode::create);
@@ -500,7 +501,7 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 	}
 
 	auto release_gpg_path = utki::cat(dirs.dist, release_gpg_filename);
-	std::cout << "create " << release_gpg_path << std::endl;
+	std::cout << "create " << utki::cat(dirs.dist_rel, release_gpg_filename) << std::endl;
 	std::filesystem::remove(release_gpg_path);
 	if (std::system( //
 			utki::cat(
@@ -518,7 +519,7 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 	}
 
 	auto inrelease_path = utki::cat(dirs.dist, inrelease_filename);
-	std::cout << "create " << inrelease_path << std::endl;
+	std::cout << "create " << utki::cat(dirs.dist_rel, inrelease_filename) << std::endl;
 	std::filesystem::remove(inrelease_path);
 	if (std::system( //
 			utki::cat(
@@ -553,7 +554,8 @@ void aptian::add(
 
 	repo_dirs dirs = {
 		.base = std::string(dir),
-		.dist = utki::cat(dir, dists_subdir, papki::as_dir(dist)),
+		.dist_rel = utki::cat(dists_subdir, papki::as_dir(dist)),
+		.dist = utki::cat(dir, dirs.dist_rel),
 		.comp = utki::cat(dirs.dist, papki::as_dir(comp)),
 		.pool = utki::cat(pool_subdir, papki::as_dir(dist), papki::as_dir(comp)),
 		.tmp = utki::cat(dir, tmp_subdir)
