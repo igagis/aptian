@@ -182,7 +182,7 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 	for (const auto& pkg_path : package_paths) {
 		auto filename = papki::not_dir(pkg_path);
 		auto suffix = papki::suffix(filename);
-		if (suffix != "deb") {
+		if (suffix != "deb" && suffix != "ddeb") {
 			std::cout << "unsupported package suffix: ." << suffix << std::endl;
 			std::cout << "  skipping: " << filename << std::endl;
 			continue;
