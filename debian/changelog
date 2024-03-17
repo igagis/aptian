@@ -1,3 +1,9 @@
+aptian (0.0.6) unstable; urgency=medium
+
+  * add support of .ddeb file suffix
+
+ -- Ivan Gagis <igagis@gmail.com>  Sun, 17 Mar 2024 19:29:48 +0000
+
 aptian (0.0.5) unstable; urgency=medium
 
   * do not print absolute paths
