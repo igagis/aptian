@@ -31,6 +31,8 @@ using namespace aptian;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
+extern const char* const program_version;
+
 namespace {
 constexpr std::string_view program_name = "aptian"sv;
 } // namespace
@@ -212,7 +214,7 @@ void print_commands_list()
 
 void print_help(std::string_view args_description)
 {
-	std::cout << program_name << " - Debian APT repository management tool" << "\n";
+	std::cout << program_name << ' ' << program_version << " - Debian APT repository management tool" << "\n";
 	std::cout << "\n";
 	std::cout << "Usage:" << "\n";
 	std::cout << "  " << program_name << " [options] <command> [--help] [command arguments]" << "\n";
@@ -235,6 +237,16 @@ int aptian::handle_cli(int argc, const char** argv)
 		"print help message",
 		[&]() {
 			print_help(p.description());
+			p.stop();
+			no_action = false;
+		}
+	);
+
+	p.add( //
+		"version",
+		"print program version",
+		[&]() {
+			std::cout << program_name << ' ' << program_version << std::endl;
 			p.stop();
 			no_action = false;
 		}
