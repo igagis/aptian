@@ -1,3 +1,9 @@
+aptian (0.0.7) UNRELEASED; urgency=medium
+
+  * add program version to help text
+
+ -- Ivan Gagis <igagis@gmail.com>  Thu, 21 Mar 2024 12:56:31 +0200
+
 aptian (0.0.6) unstable; urgency=medium
 
   * add support of .ddeb file suffix
