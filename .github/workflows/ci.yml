@@ -57,6 +57,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: cobertura.xml
+          disable_search: true # upload only specified files
           # flags: unittests # optional
           name: codecov-umbrella # optional
           fail_ci_if_error: true # optional (default = false)
