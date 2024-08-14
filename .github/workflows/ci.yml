@@ -9,7 +9,7 @@ jobs:
 ##### coverage #####
   coverage:
     runs-on: ubuntu-latest
-    container: debian:bookeworm
+    container: debian:bookworm
     name: coverage - measure
     env:
       linux_distro: debian
