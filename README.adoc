@@ -26,6 +26,7 @@ Currently supported:
 - `<distro> = debian, <release> = bookworm`
 - `<distro> = ubuntu, <release> = focal`
 - `<distro> = ubuntu, <release> = jammy`
+- `<distro> = ubuntu, <release> = noble`
 
 Download APT key:
 ....
