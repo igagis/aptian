@@ -24,7 +24,8 @@ $(.RECIPEPREFIX)$(a)echo "extern const char* const program_version = \"$$$$(myci
 endef
 $(eval $(this__rules))
 
-# build lib #####################
+###################
+#### build lib ####
 $(eval $(prorab-clear-this-vars))
 
 $(eval $(call prorab-config, config))
@@ -38,7 +39,8 @@ this_no_install := true
 
 $(eval $(prorab-build-lib))
 
-# license and format ############
+############################
+#### license and format ####
 $(eval $(prorab-clear-this-vars))
 
 this_src_dir := src
@@ -46,5 +48,6 @@ $(eval $(prorab-clang-format))
 this_license_file := LICENSE
 $(eval $(prorab-license))
 
-# subdirs #######################
+#################
+#### subdirs ####
 $(eval $(prorab-include-subdirs))
