@@ -313,9 +313,8 @@ public:
 
 		auto& packages = this->get_arch(arch);
 
-		auto i = std::find_if( //
-			packages.begin(),
-			packages.end(),
+		auto i = std::ranges::find_if( //
+			packages,
 			[&](const auto& p) {
 				return //
 					p.fields.package == pkg.fields.package && //

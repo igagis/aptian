@@ -51,7 +51,7 @@ const tst::set set("packages", [](tst::suite& suite){ // NOLINT
             "Size: 27548"sv,
         };
 
-        auto expected_string = aptian::to_string(expected);
+        const auto expected_string = aptian::to_string(expected);
 
         // std::cout << "exp str = " << expected_string << std::endl;
 
