@@ -249,11 +249,13 @@ void add_packages_to_pool(utki::span<const unadded_package> packages, const repo
 				continue;
 			}
 
-			throw std::invalid_argument(utki::cat(
-				"package ",
-				p.pkg.fields.filename,
-				" already exists in the pool and is different. Remove the existing package first before adding another one."
-			));
+			throw std::invalid_argument(
+				utki::cat(
+					"package ",
+					p.pkg.fields.filename,
+					" already exists in the pool and is different. Remove the existing package first before adding another one."
+				)
+			);
 		}
 
 		std::filesystem::create_directories(papki::dir(path));
