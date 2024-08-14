@@ -20,7 +20,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 #include "operations.hpp"
 
-#include <algorithm>
 #include <filesystem>
 #include <map>
 
@@ -314,8 +313,11 @@ public:
 
 		auto& packages = this->get_arch(arch);
 
-		auto i = std::ranges::find_if( //
-			packages,
+		// TODO: use std::ranges::find_if() when ubuntu focal support can be dropped
+		// NOLINTNEXTLINE(modernize-use-ranges, "ranges not supported in gcc from ubuntu focal")
+		auto i = std::find_if( //
+			packages.begin(),
+			packages.end(),
 			[&](const auto& p) {
 				return //
 					p.fields.package == pkg.fields.package && //
