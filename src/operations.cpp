@@ -509,7 +509,9 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 	std::filesystem::remove(release_gpg_path);
 	if (std::system( //
 			utki::cat(
-				"gpg --armor --detach-sign --sign --no-tty --use-agent --local-user=",
+				"gpg",
+				" --batch", // Use  batch  mode.  Never ask, do not allow interactive commands.
+				" --armor --detach-sign --sign --no-tty --use-agent --local-user=",
 				gpg,
 				" --output=",
 				release_gpg_path,
