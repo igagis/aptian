@@ -3,7 +3,7 @@
 
 #include <papki/span_file.hpp>
 
-#include "../../../src/packages.hpp"
+#include <aptian/packages.hpp>
 
 using namespace std::string_literals;
 using namespace std::string_view_literals;
