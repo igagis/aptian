@@ -229,11 +229,13 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 
 		pkg.append(pkg_pool_path, papki::fs_file(pkg_path).size(), hashes);
 
-		unadded_packages.push_back({//
-									.file_path = pkg_path,
-									.pkg = std::move(pkg),
-									.hashes = std::move(hashes)
-		});
+		unadded_packages.push_back(
+			{//
+			 .file_path = pkg_path,
+			 .pkg = std::move(pkg),
+			 .hashes = std::move(hashes)
+			}
+		);
 	}
 
 	return unadded_packages;
