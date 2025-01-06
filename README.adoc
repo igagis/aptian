@@ -3,7 +3,7 @@
 = {name}
 
 |====
-| link:https://github.com/igagis/{name}/releases[image:https://img.shields.io/github/tag/igagis/{name}.svg[releases]] | link:https://github.com/igagis/{name}/actions[image:https://github.com/igagis/{name}/workflows/ci/badge.svg[ci status]] | link:https://codecov.io/gh/igagis/{name}[image:https://codecov.io/gh/igagis/{name}/branch/master/graph/badge.svg?token=LKA3SRSkc3[codecov.io]]
+| link:https://github.com/igagis/{name}/releases[image:https://img.shields.io/github/tag/igagis/{name}.svg[releases]] | link:https://github.com/igagis/{name}/actions[image:https://github.com/igagis/{name}/workflows/ci/badge.svg[ci status]] | link:https://codecov.io/gh/igagis/{name}[image:https://codecov.io/gh/igagis/{name}/branch/main/graph/badge.svg?token=LKA3SRSkc3[codecov.io]]
 |====
 
 APT repository management tool
