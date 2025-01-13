@@ -255,7 +255,7 @@ void add_packages_to_pool(utki::span<const unadded_package> packages, const repo
 			// TODO: compare files byte by byte instead of comparing hashes
 			if (hashes == p.hashes) {
 				std::cout << "package " << p.pkg.fields.filename
-						  << " already exists in the pool and has same hash sums, skip adding to the pool" << std::endl;
+						  << " already exists in the pool and has same hash sums, skip adding" << std::endl;
 				continue;
 			}
 
@@ -270,7 +270,7 @@ void add_packages_to_pool(utki::span<const unadded_package> packages, const repo
 
 		std::filesystem::create_directories(papki::dir(path));
 
-		std::cout << "add " << filename << " to the pool" << std::endl;
+		std::cout << "add " << filename << std::endl;
 		std::filesystem::copy(p.file_path, path);
 	}
 }
