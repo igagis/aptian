@@ -357,7 +357,7 @@ public:
 
 			{
 				papki::fs_file packages_file(packages_path);
-				papki::file::guard packages_file_guard(packages_file, papki::file::mode::create);
+				papki::file::guard packages_file_guard(packages_file, papki::mode::create);
 
 				// TODO: does Packages file have to be sorted by package name?
 				packages_file.write(to_string(arch.second));
@@ -510,7 +510,7 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 	std::cout << "create " << utki::cat(dirs.dist_rel, release_filename) << std::endl;
 	{
 		papki::fs_file release_file(release_path);
-		papki::file::guard file_guard(release_file, papki::file::mode::create);
+		papki::file::guard file_guard(release_file, papki::mode::create);
 		release_file.write(rs.str());
 	}
 

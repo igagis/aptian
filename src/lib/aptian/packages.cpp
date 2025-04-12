@@ -165,7 +165,7 @@ public:
 
 	void parse(const papki::file& fi)
 	{
-		papki::file::guard file_guard(fi, papki::file::mode::read);
+		papki::file::guard file_guard(fi, papki::mode::read);
 
 		constexpr auto read_buffer_size = 0x1000;
 		std::array<uint8_t, read_buffer_size> buf{};

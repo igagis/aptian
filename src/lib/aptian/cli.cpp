@@ -38,7 +38,7 @@ constexpr std::string_view program_name = "aptian"sv;
 } // namespace
 
 namespace {
-void handle_init_command(utki::span<const char* const> args)
+void handle_init_command(utki::span<std::string_view> args)
 {
 	bool help = false;
 	std::string dir;
@@ -102,7 +102,7 @@ void handle_init_command(utki::span<const char* const> args)
 } // namespace
 
 namespace {
-void handle_add_command(utki::span<const char* const> args)
+void handle_add_command(utki::span<std::string_view> args)
 {
 	bool help = false;
 	std::string dir;
@@ -189,7 +189,7 @@ void handle_add_command(utki::span<const char* const> args)
 } // namespace
 
 namespace {
-void handle_command(std::string_view command, utki::span<const char* const> args)
+void handle_command(std::string_view command, utki::span<std::string_view> args)
 {
 	if (command == "init") {
 		handle_init_command(args);
@@ -252,7 +252,7 @@ int aptian::handle_cli(int argc, const char** argv)
 		}
 	);
 
-	p.add([&](std::string_view command, utki::span<const char* const> cmd_args) {
+	p.add([&](std::string_view command, utki::span<std::string_view> cmd_args) {
 		handle_command(command, cmd_args);
 		no_action = false;
 	});
