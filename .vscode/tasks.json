@@ -16,15 +16,15 @@
             "group": "build"
         },
         {
-            "label": "build-dbg",
+            "label": "build-dev",
             "type": "shell",
-            "command": "make config=dbg",
+            "command": "make config=dev",
             "group": "build"
         },
         {
-            "label": "test-dbg",
+            "label": "test-dev",
             "type": "shell",
-            "command": "make test config=dbg",
+            "command": "make test config=dev",
             "group": "build"
         },
         {
@@ -37,6 +37,12 @@
             "label": "clean-all",
             "type": "shell",
             "command": "make clean-all",
+            "group": "build"
+        },
+        {
+            "label": "lint",
+            "type": "shell",
+            "command": "make config=lint && make config=lint test",
             "group": "build"
         }
     ]

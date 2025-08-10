@@ -21,6 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 #include "operations.hpp"
 
 #include <filesystem>
+#include <iostream>
 #include <map>
 
 #include <papki/fs_file.hpp>
@@ -114,7 +115,7 @@ void aptian::init( //
 	auto pubkey_gpg_path = utki::cat(dir, pubkey_gpg_filename);
 	std::cout << "create " << pubkey_gpg_path << std::endl;
 	std::filesystem::remove(pubkey_gpg_path);
-	if (std::system(
+	if (std::system( //
 			utki::cat(
 				"gpg",
 				" --batch", // Use  batch  mode.  Never ask, do not allow interactive commands.
@@ -229,7 +230,7 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 
 		pkg.append(pkg_pool_path, papki::fs_file(pkg_path).size(), hashes);
 
-		unadded_packages.push_back(
+		unadded_packages.push_back( //
 			{//
 			 .file_path = pkg_path,
 			 .pkg = std::move(pkg),
@@ -259,9 +260,9 @@ void add_packages_to_pool(utki::span<const unadded_package> packages, const repo
 				continue;
 			}
 
-			throw std::invalid_argument(
+			throw std::invalid_argument( //
 				utki::cat(
-					"package ",
+					"package ", //
 					p.pkg.fields.filename,
 					" already exists in the pool and is different. Remove the existing package first before adding another one."
 				)

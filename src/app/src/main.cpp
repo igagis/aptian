@@ -18,6 +18,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 /* ================ LICENSE END ================ */
 
+#include <iostream>
+
 #include "../../lib/aptian/cli.hpp"
 
 int main(int argc, const char** argv)
