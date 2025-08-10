@@ -455,10 +455,22 @@ std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 				}
 				auto path = utki::cat(arch_path, file);
 
-				ret.push_back(
-					{.path = utki::cat(comp_dir, arch_dir, file),
-					 .size = papki::fs_file(path).size(),
-					 .hashes = get_file_hashes(dirs, path)}
+				ret.push_back( //
+					{//
+					 .path = utki::cat(comp_dir, arch_dir, file),
+					 .size =
+						 [&]() {
+							 uint64_t s = papki::fs_file(path).size();
+							 // on 32bit system size_t is only 32 bit, so cannot store all the file sizes
+							 if constexpr (sizeof(size_t) < sizeof(uint64_t)) {
+								 if (s > uint64_t(std::numeric_limits<size_t>::max())) {
+									 throw std::invalid_argument(utki::cat("file too big (", s, "): ", path));
+								 }
+							 }
+							 return size_t(s);
+						 }(),
+					 .hashes = get_file_hashes(dirs, path)
+					}
 				);
 			}
 		}
