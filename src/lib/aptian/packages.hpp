@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 #pragma once
 
-#include <papki/file.hpp>
+#include <fsif/file.hpp>
 #include <utki/string.hpp>
 
 namespace aptian {
@@ -89,7 +89,7 @@ public:
 static_assert(std::is_move_constructible_v<package>, "class package must be movable");
 static_assert(std::is_move_assignable_v<package>, "class package must be movable");
 
-std::vector<package> read_packages_file(const papki::file& fi);
+std::vector<package> read_packages_file(const fsif::file& fi);
 
 std::string to_string(utki::span<const package> packages);
 

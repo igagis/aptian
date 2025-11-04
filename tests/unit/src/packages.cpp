@@ -1,7 +1,7 @@
 #include <tst/set.hpp>
 #include <tst/check.hpp>
 
-#include <papki/span_file.hpp>
+#include <fsif/span_file.hpp>
 
 #include <aptian/packages.hpp>
 
@@ -36,7 +36,7 @@ const tst::set set("packages", [](tst::suite& suite){ // NOLINT
             "Architecture: all" "\n"
             "Maintainer: Ivan Gagis <igagis@gmail.com>" "\n"
             "Installed-Size: 192" "\n"
-            "Depends: libaumiks0 (= 0.3.30), libaumiks0-dbg (= 0.3.30), libpapki-dev, libaudout-dev" "\n"
+            "Depends: libaumiks0 (= 0.3.30), libaumiks0-dbg (= 0.3.30), libfsif-dev, libaudout-dev" "\n"
             "Suggests: libaumiks-doc" "\n"
             "Section: devel" "\n"
             "Priority: extra" "\n"
@@ -55,7 +55,7 @@ const tst::set set("packages", [](tst::suite& suite){ // NOLINT
 
         // std::cout << "exp str = " << expected_string << std::endl;
 
-        papki::span_file fi(expected_string);
+        fsif::span_file fi(expected_string);
         auto packages = aptian::read_packages_file(fi);
 
         // std::cout << "packages[0] = " << packages[1].to_string() << std::endl;

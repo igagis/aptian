@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 
 #include "configuration.hpp"
 
-#include <papki/fs_file.hpp>
+#include <fsif/native_file.hpp>
 #include <tml/crawler.hpp>
 
 using namespace std::string_literals;
@@ -34,7 +34,7 @@ constexpr std::string_view config_filename = "aptian.conf"sv;
 
 configuration::configuration(std::string_view base_repo_dir) :
 	conf([&]() {
-		papki::fs_file file(utki::cat(base_repo_dir, config_filename));
+		fsif::native_file file(utki::cat(base_repo_dir, config_filename));
 		if (!file.exists()) {
 			throw std::invalid_argument(utki::cat("could not open ", config_filename, " file. Non-aptian repo?"));
 		}
@@ -46,7 +46,7 @@ void configuration::create(std::string_view dir, std::string_view gpg)
 {
 	tml::forest cfg = {tml::tree("gpg"s, {tml::tree(gpg)})};
 
-	papki::fs_file cfg_file(utki::cat(dir, config_filename));
+	fsif::native_file cfg_file(utki::cat(dir, config_filename));
 
 	// TODO: check if file exists and only overwrite if --force
 

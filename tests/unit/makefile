@@ -12,7 +12,7 @@ this_srcs := $(call prorab-src-dir, src)
 this__libaptian := ../../src/lib/out/$(c)/libaptian.a
 
 this_cxxflags += -I ../../src/lib/
-this_ldlibs += $(this__libaptian) -ltst -lpapki -lutki -lclargs -ltml
+this_ldlibs += $(this__libaptian) -ltst -lfsif -lutki -lclargs -ltml
 
 $(eval $(prorab-build-app))
 

@@ -19,7 +19,7 @@ Build-Depends:
 	clang-tidy,
 	clang-format,
 	libtst-dev,
-	libpapki-dev,
+	libfsif-dev,
 	libclargs-dev,
 	libtml-dev
 Build-Depends-Indep: doxygen

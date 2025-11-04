@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 #include <iostream>
 
 #include <clargs/parser.hpp>
-#include <papki/util.hpp>
+#include <fsif/util.hpp>
 #include <utki/string.hpp>
 
 #include "operations.hpp"
@@ -99,7 +99,7 @@ void handle_init_command(utki::span<std::string_view> args)
 		throw std::invalid_argument("--gpg argument is not given");
 	}
 
-	init(papki::as_dir(dir), gpg);
+	init(fsif::as_dir(dir), gpg);
 }
 } // namespace
 
@@ -182,7 +182,7 @@ void handle_add_command(utki::span<std::string_view> args)
 	}
 
 	add( //
-		papki::as_dir(dir),
+		fsif::as_dir(dir),
 		dist,
 		comp,
 		packages

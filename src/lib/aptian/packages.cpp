@@ -163,9 +163,9 @@ class parser
 public:
 	std::vector<package> packages;
 
-	void parse(const papki::file& fi)
+	void parse(const fsif::file& fi)
 	{
-		papki::file::guard file_guard(fi, papki::mode::read);
+		fsif::file::guard file_guard(fi, fsif::mode::read);
 
 		constexpr auto read_buffer_size = 0x1000;
 		std::array<uint8_t, read_buffer_size> buf{};
@@ -185,7 +185,7 @@ public:
 };
 } // namespace
 
-std::vector<package> aptian::read_packages_file(const papki::file& fi)
+std::vector<package> aptian::read_packages_file(const fsif::file& fi)
 {
 	parser p;
 	p.parse(fi);

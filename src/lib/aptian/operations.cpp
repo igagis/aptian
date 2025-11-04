@@ -24,7 +24,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 #include <iostream>
 #include <map>
 
-#include <papki/fs_file.hpp>
+#include <fsif/native_file.hpp>
 #include <tml/tree.hpp>
 #include <utki/debug.hpp>
 #include <utki/string.hpp>
@@ -85,9 +85,9 @@ std::string apt_pool_prefix(std::string_view package_name)
 
 	constexpr auto lib_prefix_size = lib_prefix.size() + 1;
 	if (package_name.starts_with(lib_prefix) && package_name.size() >= lib_prefix_size) {
-		return papki::as_dir(package_name.substr(0, lib_prefix_size));
+		return fsif::as_dir(package_name.substr(0, lib_prefix_size));
 	}
-	return papki::as_dir(package_name.substr(0, 1));
+	return fsif::as_dir(package_name.substr(0, 1));
 }
 } // namespace
 
@@ -99,7 +99,7 @@ void aptian::init( //
 	ASSERT(!dir.empty())
 	ASSERT(!gpg.empty())
 
-	papki::fs_file dir_file(dir);
+	fsif::native_file dir_file(dir);
 
 	if (!dir_file.exists()) {
 		std::stringstream ss;
@@ -172,10 +172,10 @@ file_hashes get_file_hashes(const repo_dirs& dirs, std::string_view path)
 	}
 
 	return file_hashes{
-		.md5 = std::string(utki::trim(utki::make_string_view(papki::fs_file(md5_path).load()))),
-		.sha1 = std::string(utki::trim(utki::make_string_view(papki::fs_file(sha1_path).load()))),
-		.sha256 = std::string(utki::trim(utki::make_string_view(papki::fs_file(sha256_path).load()))),
-		.sha512 = std::string(utki::trim(utki::make_string_view(papki::fs_file(sha512_path).load())))
+		.md5 = std::string(utki::trim(utki::make_string_view(fsif::native_file(md5_path).load()))),
+		.sha1 = std::string(utki::trim(utki::make_string_view(fsif::native_file(sha1_path).load()))),
+		.sha256 = std::string(utki::trim(utki::make_string_view(fsif::native_file(sha256_path).load()))),
+		.sha512 = std::string(utki::trim(utki::make_string_view(fsif::native_file(sha512_path).load())))
 	};
 }
 
@@ -190,15 +190,15 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 	std::vector<unadded_package> unadded_packages;
 
 	for (const auto& pkg_path : package_paths) {
-		auto filename = papki::not_dir(pkg_path);
-		auto suffix = papki::suffix(filename);
+		auto filename = fsif::not_dir(pkg_path);
+		auto suffix = fsif::suffix(filename);
 		if (suffix != "deb" && suffix != "ddeb") {
 			std::cout << "unsupported package suffix: ." << suffix << std::endl;
 			std::cout << "  skipping: " << filename << std::endl;
 			continue;
 		}
 
-		papki::fs_file tmp_dir_file(dirs.tmp);
+		fsif::native_file tmp_dir_file(dirs.tmp);
 		if (tmp_dir_file.exists()) {
 			std::filesystem::remove_all(tmp_dir_file.path());
 		}
@@ -212,7 +212,7 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 		package pkg( //
 			utki::trim( //
 				utki::make_string_view( //
-					papki::fs_file( //
+					fsif::native_file( //
 						utki::cat(dirs.tmp, control_filename)
 					)
 						.load()
@@ -222,13 +222,13 @@ std::vector<unadded_package> prepare_control_info(utki::span<const std::string> 
 
 		auto pkg_name = pkg.get_name();
 
-		auto pkg_pool_dir = utki::cat(dirs.pool, apt_pool_prefix(pkg_name), papki::as_dir(pkg_name));
+		auto pkg_pool_dir = utki::cat(dirs.pool, apt_pool_prefix(pkg_name), fsif::as_dir(pkg_name));
 
 		auto pkg_pool_path = utki::cat(pkg_pool_dir, filename);
 
 		auto hashes = get_file_hashes(dirs, pkg_path);
 
-		pkg.append(pkg_pool_path, papki::fs_file(pkg_path).size(), hashes);
+		pkg.append(pkg_pool_path, fsif::native_file(pkg_path).size(), hashes);
 
 		unadded_packages.push_back( //
 			{//
@@ -250,7 +250,7 @@ void add_packages_to_pool(utki::span<const unadded_package> packages, const repo
 		const auto& filename = p.pkg.fields.filename;
 		auto path = utki::cat(dirs.base, filename);
 
-		if (papki::fs_file(path).exists()) {
+		if (fsif::native_file(path).exists()) {
 			auto hashes = get_file_hashes(dirs, path);
 
 			// TODO: compare files byte by byte instead of comparing hashes
@@ -269,7 +269,7 @@ void add_packages_to_pool(utki::span<const unadded_package> packages, const repo
 			);
 		}
 
-		std::filesystem::create_directories(papki::dir(path));
+		std::filesystem::create_directories(fsif::dir(path));
 
 		std::cout << "add " << filename << std::endl;
 		std::filesystem::copy(p.file_path, path);
@@ -289,7 +289,7 @@ class architectures
 		auto packages_path = utki::cat(this->comp_dir, binary_prefix, arch, '/', packages_filename);
 
 		auto packages = [&]() {
-			papki::fs_file file(packages_path);
+			fsif::native_file file(packages_path);
 			if (file.exists()) {
 				return aptian::read_packages_file(file);
 			}
@@ -357,8 +357,8 @@ public:
 			auto packages_path = utki::cat(bin_dir, packages_filename);
 
 			{
-				papki::fs_file packages_file(packages_path);
-				papki::file::guard packages_file_guard(packages_file, papki::mode::create);
+				fsif::native_file packages_file(packages_path);
+				fsif::file::guard packages_file_guard(packages_file, fsif::mode::create);
 
 				// TODO: does Packages file have to be sorted by package name?
 				packages_file.write(to_string(arch.second));
@@ -389,9 +389,9 @@ namespace {
 std::vector<std::string> list_archs(const repo_dirs& dirs)
 {
 	std::vector<std::string> ret;
-	for (const auto& f : papki::fs_file(dirs.comp).list_dir()) {
-		if (papki::is_dir(f) && f.starts_with(binary_prefix)) {
-			auto arch = papki::as_file(f).substr(binary_prefix.size());
+	for (const auto& f : fsif::native_file(dirs.comp).list_dir()) {
+		if (fsif::is_dir(f) && f.starts_with(binary_prefix)) {
+			auto arch = fsif::as_file(f).substr(binary_prefix.size());
 			ret.emplace_back(arch);
 		}
 	}
@@ -403,9 +403,9 @@ namespace {
 std::vector<std::string> list_components(const repo_dirs& dirs)
 {
 	std::vector<std::string> ret;
-	for (const auto& f : papki::fs_file(dirs.dist).list_dir()) {
-		if (papki::is_dir(f)) {
-			ret.emplace_back(papki::as_file(f));
+	for (const auto& f : fsif::native_file(dirs.dist).list_dir()) {
+		if (fsif::is_dir(f)) {
+			ret.emplace_back(fsif::as_file(f));
 		}
 	}
 	return ret;
@@ -422,7 +422,7 @@ std::string get_cur_date(const repo_dirs& dirs)
 	if (std::system(utki::cat("date --rfc-email --utc > ", cur_date_path).c_str()) != 0) {
 		throw std::runtime_error("failed to invoke 'date'");
 	}
-	return std::string(utki::trim(utki::make_string_view(papki::fs_file(cur_date_path).load())));
+	return std::string(utki::trim(utki::make_string_view(fsif::native_file(cur_date_path).load())));
 }
 } // namespace
 
@@ -439,18 +439,18 @@ std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 
 	std::vector<file_hash_info> ret;
 
-	for (const auto& comp_dir : papki::fs_file(dirs.dist).list_dir()) {
-		if (!papki::is_dir(comp_dir)) {
+	for (const auto& comp_dir : fsif::native_file(dirs.dist).list_dir()) {
+		if (!fsif::is_dir(comp_dir)) {
 			continue;
 		}
 		auto comp_path = utki::cat(dirs.dist, comp_dir);
-		for (const auto& arch_dir : papki::fs_file(comp_path).list_dir()) {
-			if (!papki::is_dir(arch_dir)) {
+		for (const auto& arch_dir : fsif::native_file(comp_path).list_dir()) {
+			if (!fsif::is_dir(arch_dir)) {
 				continue;
 			}
 			auto arch_path = utki::cat(comp_path, arch_dir);
-			for (const auto& file : papki::fs_file(arch_path).list_dir()) {
-				if (papki::is_dir(file)) {
+			for (const auto& file : fsif::native_file(arch_path).list_dir()) {
+				if (fsif::is_dir(file)) {
 					continue;
 				}
 				auto path = utki::cat(arch_path, file);
@@ -460,7 +460,7 @@ std::vector<file_hash_info> list_files_for_release(const repo_dirs& dirs)
 					 .path = utki::cat(comp_dir, arch_dir, file),
 					 .size =
 						 [&]() {
-							 uint64_t s = papki::fs_file(path).size();
+							 uint64_t s = fsif::native_file(path).size();
 							 // on 32bit system size_t is only 32 bit, so cannot store all the file sizes
 							 if constexpr (sizeof(size_t) < sizeof(uint64_t)) {
 								 if (s > uint64_t(std::numeric_limits<size_t>::max())) {
@@ -522,8 +522,8 @@ void create_release_file(const repo_dirs& dirs, std::string_view dist, std::stri
 	auto release_path = utki::cat(dirs.dist, release_filename);
 	std::cout << "create " << utki::cat(dirs.dist_rel, release_filename) << std::endl;
 	{
-		papki::fs_file release_file(release_path);
-		papki::file::guard file_guard(release_file, papki::mode::create);
+		fsif::native_file release_file(release_path);
+		fsif::file::guard file_guard(release_file, fsif::mode::create);
 		release_file.write(rs.str());
 	}
 
@@ -583,10 +583,10 @@ void aptian::add(
 
 	repo_dirs dirs = {
 		.base = std::string(dir),
-		.dist_rel = utki::cat(dists_subdir, papki::as_dir(dist)),
+		.dist_rel = utki::cat(dists_subdir, fsif::as_dir(dist)),
 		.dist = utki::cat(dir, dirs.dist_rel),
-		.comp = utki::cat(dirs.dist, papki::as_dir(comp)),
-		.pool = utki::cat(pool_subdir, papki::as_dir(dist), papki::as_dir(comp)),
+		.comp = utki::cat(dirs.dist, fsif::as_dir(comp)),
+		.pool = utki::cat(pool_subdir, fsif::as_dir(dist), fsif::as_dir(comp)),
 		.tmp = utki::cat(dir, tmp_subdir)
 	};
 

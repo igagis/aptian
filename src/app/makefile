@@ -15,7 +15,7 @@ this__version_cpp := $(this_out_dir)version.cpp
 this_srcs := $(this__version_cpp) $(call prorab-src-dir, src)
 
 this_ldlibs += $(this__libaptian)
-this_ldlibs += -Wl,-Bstatic -ltml -lpapki -lclargs -lutki -Wl,-Bdynamic
+this_ldlibs += -Wl,-Bstatic -ltml -lfsif -lclargs -lutki -Wl,-Bdynamic
 
 $(eval $(prorab-build-app))
 
